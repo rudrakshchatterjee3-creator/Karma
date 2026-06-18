@@ -103,7 +103,14 @@ You MUST use these exact emission factors (EF) to calculate the carbon footprint
 - Metro / Train: 0.025 kg CO2e/km
 - Bus: 0.055 kg CO2e/km
 - Flight: 0.255 kg CO2e/km (short-haul) or 0.195 kg CO2e/km (long-haul)
-- Air Conditioner (AC): 0.82 kg CO2e/hour per ton
+- Air Conditioner (AC): Baseline is 0.82 kg CO2e/hour per ton (for a standard non-inverter at 24°C).
+  Modifiers (apply cumulatively):
+  - Inverter AC: Multiply final emissions by 0.70 (-30%)
+  - 5-Star AC: Multiply final emissions by 0.80 (-20%)
+  - 3-Star AC: Multiply final emissions by 0.90 (-10%)
+  - Tonnage: Multiply by exact tonnage (e.g., 1.5 ton = 1.5x)
+  - Temperature: For every 1°C ABOVE 24°C, emissions decrease. Multiply by 0.94 for each degree. (e.g. 26°C is 2 degrees higher = 0.94 * 0.94 = ~0.88x)
+  - Temperature: For every 1°C BELOW 24°C, emissions increase. Multiply by 1.06 for each degree.
 - Ceiling Fan: 0.034 kg CO2e/hour
 - Room Heater: 0.95 kg CO2e/hour
 - TV: 0.058 kg CO2e/hour
@@ -188,7 +195,7 @@ export async function POST(request: Request) {
               { role: "system", content: SYSTEM_PROMPT },
               { role: "user", content: actionText },
             ],
-            temperature: 0.1,
+            temperature: 0.0,
             max_tokens: 400,
           }),
         });
