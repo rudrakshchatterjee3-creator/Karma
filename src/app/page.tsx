@@ -182,7 +182,11 @@ export default function KarmaApp() {
       if (stored) {
         try {
           const parsed = JSON.parse(stored) as AppState;
-          setState({ ...getInitialState(), ...parsed, showLanding: false });
+          setState({ 
+            ...getInitialState(), 
+            ...parsed, 
+            showLanding: parsed.onboarded ? false : (parsed.showLanding ?? true) 
+          });
           setIsLightMode(parsed.profile?.themePreference === "light");
           setShowSetup(false);
         } catch {
@@ -204,7 +208,11 @@ export default function KarmaApp() {
         .then(data => {
           if (data && data.profile) {
             // Found cloud data, override local
-            setState({ ...getInitialState(), ...data, showLanding: false });
+            setState({ 
+              ...getInitialState(), 
+              ...data, 
+              showLanding: data.onboarded ? false : (data.showLanding ?? true) 
+            });
             setIsLightMode(data.profile.themePreference === "light");
             setShowSetup(false);
           }
