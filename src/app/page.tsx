@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowRight, Sun, Moon,
+  ArrowRight, Sun, Moon, LogOut,
   BarChart3,
   Bolt,
   Check,
@@ -972,7 +972,7 @@ function Header({ compact, profile, isLightMode, toggleTheme }: { compact: boole
         <LogoMark />
         <div>
           <p className="text-lg font-semibold tracking-normal text-foreground">Karma</p>
-          <p className="text-xs text-[var(--foreground)]/45">{displayName}</p>
+          <p className="text-xs text-[var(--foreground)]/45 truncate max-w-[140px] sm:max-w-xs">{displayName}</p>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -988,15 +988,6 @@ function Header({ compact, profile, isLightMode, toggleTheme }: { compact: boole
             <Moon size={18} />
           </div>
         </button>
-        {session?.user && (
-          <button 
-            className="secondary-button h-9 px-3 text-xs flex items-center gap-2 border-sage/50 transition-colors hover:bg-coral/10 hover:text-coral hover:border-coral/50 text-foreground" 
-            onClick={() => signOut()}
-          >
-            {session.user.image && <img src={session.user.image} alt="Avatar" className="w-5 h-5 rounded-full" />}
-            Sign Out
-          </button>
-        )}
       </div>
     </div>
   );
@@ -2099,6 +2090,11 @@ function ProfileView({
           <button className="secondary-button flex-1 justify-center" onClick={() => setDraft(profile)}>
             Undo changes
           </button>
+          {session?.user && (
+            <button className="secondary-button flex-1 justify-center text-coral hover:bg-coral/10 hover:border-coral/50" onClick={() => signOut()}>
+              <LogOut size={16} /> Sign Out
+            </button>
+          )}
           <button className="secondary-button flex-1 justify-center" onClick={resetData}>
             <RotateCcw size={16} /> Reset data
           </button>
