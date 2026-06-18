@@ -1703,7 +1703,7 @@ function InsightsView({
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <MiniStat label="Analysis Confidence" value={coachReport && coachReport.sourceEngine === "nvidia_nim" ? "High" : "Medium"} />
-              <MiniStat label="Best next step" value={top?.effort === "low" ? "Under 10 min" : "Plan once"} />
+              <MiniStat label="Effort required" value={top?.effort === "low" ? "Under 10 min" : "Plan once"} />
               <MiniStat label="Estimated upside" value={top ? `${formatPoints(top.points)} / week` : "—"} />
             </div>
           </>
