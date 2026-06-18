@@ -453,7 +453,7 @@ export default function KarmaApp() {
         <div className={`app-shell ${isLightMode ? "theme-light" : ""}`}>
         <ThemeToggle isLightMode={isLightMode} toggleTheme={toggleTheme} />
         <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8 relative">
-          <Header compact profile={state.profile} />
+          <Header compact profile={state.profile} onLogoClick={() => setState((s) => ({ ...s, showLanding: true }))} />
           
           <section className="flex flex-1 flex-col items-center justify-center py-12">
             <div className="w-full max-w-2xl space-y-8">
@@ -606,7 +606,7 @@ export default function KarmaApp() {
       <div className="mx-auto grid min-h-screen w-full max-w-7xl grid-rows-[auto_1fr_auto] px-4 py-5 sm:px-6 lg:grid-cols-[230px_1fr] lg:grid-rows-[auto_1fr] lg:gap-6 lg:px-8 relative">
         <aside className="hidden lg:block">
           <div className="sticky top-5 space-y-5">
-            <Header compact={false} profile={state.profile} />
+            <Header compact={false} profile={state.profile} onLogoClick={() => setState((s) => ({ ...s, showLanding: true }))} />
             <nav className="panel p-2">
               {tabs.map((item) => {
                 const Icon = item.icon;
@@ -629,7 +629,7 @@ export default function KarmaApp() {
         </aside>
 
         <div className="lg:hidden">
-          <Header compact profile={state.profile} />
+          <Header compact profile={state.profile} onLogoClick={() => setState((s) => ({ ...s, showLanding: true }))} />
         </div>
 
         <section className="min-w-0 pb-28 lg:pb-8">
@@ -953,16 +953,18 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
 }
 
 // ─────────────────────────────────────────────────────────────
-function Header({ compact, profile }: { compact: boolean; profile: Profile }) {
+function Header({ compact, profile, onLogoClick }: { compact: boolean; profile: Profile; onLogoClick?: () => void }) {
   const { data: session } = useSession();
   const displayName = session?.user?.name ? `${session.user.name}'s tracker` : (profile.name ? `${profile.name}'s tracker` : "Carbon emissions tracker");
   
   return (
     <div className={`flex items-center gap-3 ${compact ? "py-2" : ""}`}>
-      <LogoMark />
-      <div>
-        <p className="text-lg font-semibold tracking-normal text-foreground">Karma</p>
-        <p className="text-xs text-[var(--foreground)]/45 truncate max-w-[140px] sm:max-w-xs">{displayName}</p>
+      <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" onClick={onLogoClick}>
+        <LogoMark />
+        <div>
+          <p className="text-lg font-semibold tracking-normal text-foreground">Karma</p>
+          <p className="text-xs text-[var(--foreground)]/45 truncate max-w-[140px] sm:max-w-xs">{displayName}</p>
+        </div>
       </div>
     </div>
   );
