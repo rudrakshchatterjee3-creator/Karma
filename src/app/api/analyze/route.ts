@@ -197,7 +197,7 @@ export async function POST(request: Request) {
           if (content) {
             const parsed = parseJSONBlock(content);
             const carbonRounded = parseFloat(parsed.carbon.toFixed(2));
-            const points = toPoints(carbonRounded);
+            const points = typeof parsed.points === 'number' ? parsed.points : Math.round(carbonRounded * -100);
 
             return NextResponse.json({
               carbon: carbonRounded,
@@ -238,7 +238,7 @@ export async function POST(request: Request) {
     const isMetro= /\b(metro|train|local train|subway|rail|railway|tram)\b/.test(t);
     const isBus  = /\b(bus|shuttle|minibus|volvo|coach)\b/.test(t);
     const isFlight=/\b(flight|flew|fly|airplane|plane|airport|airline|indigo|air india|vistara|spicejet)\b/.test(t);
-    const isWalk = /\b(walk|walked|walking|stroll|ran|running|jog|jogging|hike|hiking)\b/.test(t);
+    const isWalk = /\b(walk|walked|walking|stroll|run|running|jog|jogging|hike|hiking)\b/.test(t);
     const isCycle= /\b(cycle|bicycle|cycling|e-bike|ebike|pedal)\b/.test(t);
     
     // ── Fuel type modifiers ───────────────────────────────────────────────────
@@ -293,13 +293,10 @@ export async function POST(request: Request) {
           note = `Flight of ~${dist} km estimated at ${EF.flight_short} kg CO2e/km.`;
           confidence = km ? 'high' : 'medium';
           if (!km) assumptions.push('Distance assumed 500 km — update for accuracy.');
-        } else if (isWalk || isCycle || isEV) {
-          carbonKg = 0;
-          note = isEV
-            ? 'Electric vehicle — near-zero tailpipe emissions on Indian grid mix.'
-            : 'Walking or cycling produces zero direct emissions. Well done.';
+        } else if (isEV) {
+          carbonKg = -0.5;
+          note = 'Electric vehicle — near-zero tailpipe emissions on Indian grid mix.';
           confidence = 'high';
-          carbonKg = isEV ? -0.5 : -(km ?? 3) * 0.03; // relative saving vs car
           assumptions.push(`Saving vs. equivalent petrol car trip of ~${km ?? 3} km.`);
         } else if (isBike) {
           const dist = km ?? 10;
@@ -316,6 +313,12 @@ export async function POST(request: Request) {
           note = `${dist} km by car: ${EF.car_petrol} kg CO2e/km (petrol).`;
           confidence = km ? 'high' : 'medium';
           if (!km) assumptions.push('Distance assumed 15 km — mention "X km" for better accuracy.');
+        } else if (isWalk || isCycle) {
+          carbonKg = 0;
+          note = 'Walking or cycling produces zero direct emissions. Well done.';
+          confidence = 'high';
+          carbonKg = -(km ?? 3) * 0.03; // relative saving vs car
+          assumptions.push(`Saving vs. equivalent petrol car trip of ~${km ?? 3} km.`);
         } else if (isCab) {
           const dist = km ?? 10;
           const ef = t.includes('auto') ? EF.auto : EF.cab_taxi;

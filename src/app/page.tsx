@@ -705,18 +705,18 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
   return (
     <div className="relative min-h-screen flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-5 sm:px-10">
+      <div className="flex items-center justify-between px-6 py-5 sm:px-10 z-10 relative">
         <div className="flex items-center gap-3">
           <LogoMark />
-          <span className="text-lg font-semibold tracking-normal">Karma</span>
+          <span className="text-lg font-semibold tracking-normal text-foreground">Karma</span>
         </div>
         <div className="flex items-center gap-3">
           <button
-            className="secondary-button flex h-9 w-9 items-center justify-center p-0 border-sage/50"
+            className="secondary-button flex h-9 w-9 items-center justify-center p-0 border-sage/50 text-foreground"
             onClick={toggleTheme}
             aria-label="Toggle theme"
           >
-            {isLightMode ? <Sun size={18} /> : <Moon size={18} />}
+            {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
           </button>
           <button className="primary-button" onClick={onStart}>
             Explore <ArrowRight size={16} />
@@ -725,13 +725,18 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
       </div>
 
       {/* Hero */}
-      <section className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center sm:px-10 sm:py-24">
+      <section className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center sm:px-10 sm:py-24 relative z-10">
+        
+        {/* Giant background orbs for density and glassmorphism */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-sage/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" />
+        <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-sky-400/5 rounded-full blur-[100px] pointer-events-none -z-10" />
+        
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8 inline-flex items-center gap-2 rounded-full border border-sage/30 bg-sage/10 px-4 py-2 text-xs font-medium text-sage backdrop-blur-sm"
+          className="mb-8 inline-flex items-center gap-2 rounded-full border border-sage/30 bg-sage/10 px-4 py-2 text-xs font-medium text-sage backdrop-blur-md"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
           Live emissions ticking now
@@ -742,12 +747,12 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="mb-6 rounded-3xl border border-white/10 bg-white/5 px-8 py-5 backdrop-blur-xl"
+          className="mb-8 rounded-3xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 px-10 py-6 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
         >
-          <p className="text-xs uppercase tracking-[0.2em] text-white/40 mb-2">CO2 emitted since you opened this page</p>
-          <p className="font-outfit text-4xl sm:text-5xl font-medium tracking-tight text-white">
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--foreground)]/50 mb-2 font-semibold">CO2 emitted since you opened this page</p>
+          <p className="font-outfit text-5xl sm:text-6xl font-medium tracking-tight text-foreground">
             {Math.round(globalTonnes).toLocaleString("en-US")}
-            <span className="ml-2 text-xl text-white/50">tonnes</span>
+            <span className="ml-3 text-2xl text-[var(--foreground)]/50">tonnes</span>
           </p>
         </motion.div>
 
@@ -756,11 +761,14 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl text-balance"
+          className="max-w-4xl text-5xl font-bold leading-[1.1] tracking-tight sm:text-7xl text-balance text-foreground"
         >
           Your lifestyle,{" "}
-          <span className="bg-gradient-to-r from-sage via-sky-300 to-amber-300 bg-clip-text text-transparent">
-            recalibrated.
+          <span 
+            className="inline-block bg-[linear-gradient(to_right,#9CAF88,#60A5FA,#F6C85F,#9CAF88)] bg-[length:200%_auto] bg-clip-text text-transparent"
+            style={{ animation: 'gradient-drift 4s linear infinite' }}
+          >
+            Reimagined.
           </span>
         </motion.h1>
 
@@ -769,7 +777,7 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-6 max-w-xl text-lg leading-8 text-white/58"
+          className="mt-8 max-w-2xl text-xl leading-relaxed text-[var(--foreground)]/70 font-medium"
         >
           Karma turns your daily choices into a weekly action plan that saves money, reduces waste, and lowers your carbon footprint — without the guilt.
         </motion.p>
@@ -779,15 +787,15 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-10 flex flex-wrap items-center justify-center gap-4"
+          className="mt-12 flex flex-col items-center justify-center gap-4"
         >
           <button
-            className="primary-button text-base px-8 py-3.5 text-lg"
+            className="primary-button text-base px-10 py-4 text-lg font-semibold shadow-lg shadow-sage/20 transition-transform hover:scale-105 active:scale-95"
             onClick={onStart}
           >
             Start tracking free <ArrowRight size={20} />
           </button>
-          <span className="text-sm text-white/38">No account needed · Free forever</span>
+          <span className="text-sm font-medium text-[var(--foreground)]/50 tracking-wide uppercase">No account needed · Free forever</span>
         </motion.div>
       </section>
 
@@ -796,13 +804,13 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.5 }}
-        className="border-y border-white/8 bg-white/[0.025] px-6 py-8 sm:px-10"
+        className="border-y border-[var(--foreground)]/10 bg-[var(--foreground)]/5 px-6 py-8 sm:px-10 backdrop-blur-sm"
       >
         <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 sm:grid-cols-4">
           {stats.map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="font-outfit text-3xl font-medium tracking-tight">{stat.value}</p>
-              <p className="mt-1 text-xs leading-5 text-white/45">{stat.label}</p>
+              <p className="font-outfit text-4xl font-medium tracking-tight text-foreground">{stat.value}</p>
+              <p className="mt-2 text-xs leading-5 text-[var(--foreground)]/60 font-medium uppercase tracking-wider">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -823,13 +831,13 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.6 + i * 0.1 }}
-                  className="panel p-6 group hover:-translate-y-1 transition-transform duration-300"
+                  className="panel p-6 group hover:-translate-y-1 transition-transform duration-300 border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-xl shadow-black/5"
                 >
-                  <div className={`mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 ${feat.accent} ${feat.glow}`}>
+                  <div className={`mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--foreground)]/5 ${feat.accent} ${feat.glow}`}>
                     <Icon size={22} />
                   </div>
-                  <h3 className="mb-2 font-semibold">{feat.title}</h3>
-                  <p className="text-sm leading-6 text-white/55">{feat.desc}</p>
+                  <h3 className="mb-2 font-semibold text-foreground text-lg">{feat.title}</h3>
+                  <p className="text-sm leading-relaxed text-[var(--foreground)]/60">{feat.desc}</p>
                 </motion.div>
               );
             })}
@@ -838,12 +846,13 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
       </section>
 
       {/* Final CTA */}
-      <section className="px-6 pb-20 text-center sm:px-10">
-        <div className="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/[0.03] p-10 backdrop-blur-xl">
-          <p className="mb-2 text-xs font-medium uppercase tracking-[0.22em] text-white/45">Ready?</p>
-          <h2 className="text-3xl font-semibold tracking-tight">Your hidden waste is waiting to be found.</h2>
-          <p className="mt-4 text-sm leading-6 text-white/50">Takes 3 minutes to set up. Works offline. No signup required.</p>
-          <button className="primary-button mt-8 w-full justify-center py-4 text-base" onClick={onStart}>
+      <section className="px-6 pb-20 text-center sm:px-10 relative z-10">
+        <div className="mx-auto max-w-xl rounded-3xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-10 backdrop-blur-2xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--foreground)]/50 relative z-10">Ready?</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground relative z-10">Your hidden waste is waiting to be found.</h2>
+          <p className="mt-4 text-base leading-relaxed text-[var(--foreground)]/60 relative z-10">Takes 3 minutes to set up. Works offline. No signup required.</p>
+          <button className="primary-button mt-8 w-full justify-center py-4 text-lg font-medium relative z-10" onClick={onStart}>
             Build my footprint <ArrowRight size={18} />
           </button>
         </div>
