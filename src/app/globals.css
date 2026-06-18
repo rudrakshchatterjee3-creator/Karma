@@ -9,6 +9,7 @@
   
   --font-sans: var(--font-geist-sans), "Inter", sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
+  --font-outfit: var(--font-outfit), sans-serif;
 
   /* Massive sprawling soft shadows to replace generic borders */
   --shadow-sprawl: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
@@ -94,21 +95,27 @@ input:focus-visible {
 }
 
 .panel {
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 28px;
-  background: var(--panel-bg);
-  box-shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)), rgba(17, 24, 39, 0.25);
+  box-shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 .theme-light .panel,
 .theme-light .story-panel,
 .theme-light .hero-panel,
 .theme-light .share-card {
-  border-color: rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.62)),
-    rgba(255, 255, 255, 0.72);
-  box-shadow: 0 24px 70px -42px rgba(15, 23, 42, 0.35);
+    radial-gradient(circle at 12% 10%, rgba(156, 175, 136, 0.22), transparent 38%),
+    radial-gradient(circle at 85% 20%, rgba(96, 165, 250, 0.18), transparent 35%),
+    radial-gradient(circle at 50% 85%, rgba(246, 200, 95, 0.12), transparent 45%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.55));
+  box-shadow: 0 20px 60px -25px rgba(15, 23, 42, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .theme-light .text-white,
@@ -168,21 +175,28 @@ input:focus-visible {
 }
 
 .hero-panel {
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 32px;
   background:
     radial-gradient(circle at 12% 10%, rgba(156, 175, 136, 0.18), transparent 34%),
     radial-gradient(circle at 85% 20%, rgba(96, 165, 250, 0.14), transparent 32%),
     linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.026)),
-    #101720;
-  box-shadow: 0 28px 90px -42px rgba(0, 0, 0, 0.9);
+    rgba(16, 23, 32, 0.6);
+  box-shadow: 0 28px 90px -42px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 .story-panel {
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 32px;
-  background: var(--story-panel-bg);
-  box-shadow: 0 28px 90px -44px rgba(0, 0, 0, 0.9);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.032)),
+    radial-gradient(circle at 50% 0%, rgba(156, 175, 136, 0.20), transparent 50%),
+    rgba(16, 23, 32, 0.6);
+  box-shadow: 0 28px 90px -44px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   transition: transform 300ms ease, box-shadow 300ms ease;
 }
 

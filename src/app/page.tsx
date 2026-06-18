@@ -1370,11 +1370,11 @@ function CarbonConstellation({ logs }: { logs: LogEntry[] }) {
     <div className="carbon-map" aria-label="Live carbon footprint map">
       <div className="absolute left-4 top-4">
         <p className="text-xs uppercase tracking-[0.18em] text-white/38">Live footprint map</p>
-        <p className="mt-1 text-2xl font-semibold">{carbon(total)}</p>
+        <p className="mt-1 font-outfit text-3xl font-medium tracking-tight">{carbon(total)}</p>
       </div>
       <div className="absolute inset-0 mt-8 grid place-items-center">
         <motion.div
-          className="h-28 w-28 rounded-full border border-sage/35 bg-sage/10"
+          className="h-28 w-28 rounded-full border border-sage/35 bg-sage/10 drop-shadow-[0_0_25px_rgba(156,175,136,0.4)]"
           animate={{ scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
           transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -1393,7 +1393,7 @@ function CarbonConstellation({ logs }: { logs: LogEntry[] }) {
               animate={{ y: [y, y - 5, y] }}
               transition={{ duration: 3 + Math.abs(node.value) / 2, repeat: Infinity, ease: "easeInOut" }}
             >
-              <div className={`grid h-12 w-12 place-items-center rounded-2xl border ${isCleaner ? "border-sage/40 bg-sage/15" : "border-coral/35 bg-coral/12"}`}>
+              <div className={`grid h-12 w-12 place-items-center rounded-2xl border ${isCleaner ? "border-sage/40 bg-sage/15 drop-shadow-[0_0_15px_rgba(156,175,136,0.5)]" : "border-coral/35 bg-coral/12 drop-shadow-[0_0_15px_rgba(249,115,106,0.5)]"}`}>
                 <Icon className={isCleaner ? "text-sage" : "text-coral"} size={19} />
               </div>
             </motion.div>
@@ -1473,11 +1473,11 @@ function StepHint({ number, title, text }: { number: string; title: string; text
   );
 }
 
-function MiniStat({ label, value }: { label: string; value?: string }) {
+function MiniStat({ label, value }: { label: string; value?: string | number }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
       <p className="text-xs uppercase tracking-[0.16em] text-white/38">{label}</p>
-      <p className="mt-2 text-lg font-semibold">{value}</p>
+      <p className="mt-2 font-outfit text-2xl font-medium tracking-tight">{value}</p>
     </div>
   );
 }
