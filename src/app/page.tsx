@@ -16,6 +16,7 @@ import {
   MapPin,
   Leaf,
   Plus,
+  RotateCcw,
   Trash2,
   Save,
   Settings2,
