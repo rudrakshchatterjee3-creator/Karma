@@ -405,10 +405,33 @@ export default function KarmaApp() {
   }
 
   function setActionStatus(id: string, status: Action["status"]) {
-    setState((current) => ({
-      ...current,
-      actions: current.actions.map((action) => (action.id === id ? { ...action, status } : action)),
-    }));
+    setState((current) => {
+      let found = false;
+      const nextActions = current.actions.map((action) => {
+        if (action.id === id) {
+          found = true;
+          return { ...action, status };
+        }
+        return action;
+      });
+      
+      if (!found && coachReport) {
+        const aiAction = coachReport.actions.find((a) => (a as Action).id === id);
+        if (aiAction) {
+          nextActions.push({ ...(aiAction as Action), status });
+        }
+      }
+      
+      return { ...current, actions: nextActions };
+    });
+
+    setCoachReport((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        actions: current.actions.map((action) => ((action as Action).id === id ? { ...(action as Action), status } : (action as Action))),
+      };
+    });
   }
 
   async function resetData() {
