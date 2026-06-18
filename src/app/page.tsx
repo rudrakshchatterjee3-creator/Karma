@@ -969,16 +969,18 @@ function SetupOverlay({
   onFinish: (profile: Profile) => void;
   onSkip: () => void;
 }) {
+  const { data: session } = useSession();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Profile>({
     ...profile,
+    name: session?.user?.name || profile.name,
   });
 
   const setupSteps = [
     {
       eyebrow: "Welcome",
       title: "Make Karma yours.",
-      text: "A carbon tracker works better when it knows who it is helping. Start with your name and city so the story and dashboard feel personal.",
+      text: "A carbon tracker works better when it knows who it is helping. Start with your baseline details so the story and dashboard feel personal.",
       icon: UserRound,
     },
     {
@@ -1050,14 +1052,24 @@ function SetupOverlay({
               <AnimatePresence mode="wait">
                 {step === 0 && (
                   <motion.div key="step-0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
-                    <Field label="Your name">
-                      <input
-                        className="input"
-                        value={draft.name}
-                        onChange={(e) => setDraft((current) => ({ ...current, name: e.target.value }))}
-                        placeholder="Example: Ayaan"
-                      />
-                    </Field>
+                    {session?.user ? (
+                      <div className="mb-2 flex items-center gap-4 rounded-2xl border border-sage/20 bg-sage/5 p-4">
+                        {session.user.image && <img src={session.user.image} alt="" className="h-10 w-10 rounded-full border border-sage/30" />}
+                        <div>
+                          <p className="font-medium text-white">{session.user.name}</p>
+                          <p className="text-xs text-white/60">{session.user.email}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <Field label="Your name">
+                        <input
+                          className="input"
+                          value={draft.name}
+                          onChange={(e) => setDraft((current) => ({ ...current, name: e.target.value }))}
+                          placeholder="Example: Ayaan"
+                        />
+                      </Field>
+                    )}
                     <div className="grid grid-cols-2 gap-4">
                       <Field label="Country">
                         <input
@@ -1916,6 +1928,7 @@ function ProfileView({
   resetData: () => void;
   applyTheme: (theme: Profile["themePreference"]) => void;
 }) {
+  const { data: session } = useSession();
   const [draft, setDraft] = useState(profile);
   const [saved, setSaved] = useState(false);
 
@@ -1932,9 +1945,19 @@ function ProfileView({
     <div className="space-y-5">
       <PageTitle eyebrow="Profile" title="Edit your carbon baseline." subtitle="These values shape your footprint estimate, insights, and action plan. Changes apply after you save." />
       <div className="panel grid gap-4 p-5 sm:grid-cols-2">
-        <Field label="Name">
-          <input className="input" value={draft.name} onChange={(e) => setDraft((current) => ({ ...current, name: e.target.value }))} placeholder="Your name" />
-        </Field>
+        {session?.user ? (
+          <div className="col-span-1 sm:col-span-2 mb-2 flex items-center gap-4 rounded-2xl border border-sage/20 bg-sage/5 p-4">
+            {session.user.image && <img src={session.user.image} alt="" className="h-10 w-10 rounded-full border border-sage/30" />}
+            <div>
+              <p className="font-medium text-foreground">{session.user.name}</p>
+              <p className="text-xs text-[var(--foreground)]/60">{session.user.email}</p>
+            </div>
+          </div>
+        ) : (
+          <Field label="Name">
+            <input className="input" value={draft.name} onChange={(e) => setDraft((current) => ({ ...current, name: e.target.value }))} placeholder="Your name" />
+          </Field>
+        )}
         <Field label="Country">
           <input className="input" value={draft.country} onChange={(e) => setDraft((current) => ({ ...current, country: e.target.value }))} placeholder="e.g. India" />
         </Field>
