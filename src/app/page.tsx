@@ -1253,7 +1253,7 @@ function TodayView({
           </div>
         </section>
 
-        <section className="panel flex flex-col justify-between p-5">
+        <section className="panel flex flex-col justify-between p-5 min-h-[350px]">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-white/45">This week&apos;s leak</p>
@@ -1261,7 +1261,15 @@ function TodayView({
             </div>
             <div className="icon-tile"><LeakIcon size={22} /></div>
           </div>
-          <p className="mt-8 text-sm leading-6 text-white/60">
+          
+          <div className="flex-1 flex items-center justify-center relative py-10">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-36 w-36 animate-pulse rounded-full bg-white/[0.03] blur-2xl" />
+            </div>
+            <LeakIcon size={96} strokeWidth={0.7} className="text-white/10 relative z-10" />
+          </div>
+
+          <p className="mt-2 text-sm leading-6 text-white/60">
             This category is creating the clearest carbon-and-cost signal this week. Start here for the fastest visible improvement.
           </p>
         </section>
