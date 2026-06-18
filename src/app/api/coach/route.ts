@@ -65,7 +65,7 @@ export async function POST(request: Request) {
 - Diet: ${profile.diet}
 - AC Usage: ${profile.acHours} hrs/day
 - Commute: ${profile.commuteKm} km/week by ${profile.commuteMode}
-- Food Delivery: ${profile.deliveryFrequency || 0} times/week
+- Food Delivery: ${profile.deliveries || 0} times/week
 - Household Size: ${profile.household} people
 - Monthly Electricity Bill: Rs. ${profile.bill}
 
