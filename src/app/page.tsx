@@ -2127,7 +2127,7 @@ function CarbonConstellation({ logs }: { logs: LogEntry[] }) {
         <p className="text-xs uppercase tracking-[0.18em] text-white/38">Live footprint map</p>
         <p className="mt-1 font-outfit text-3xl font-medium tracking-tight">{carbon(total)}</p>
       </div>
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div className="relative flex-1 my-8 min-h-[260px] flex items-center justify-center pointer-events-none">
         <motion.div
           className="h-28 w-28 rounded-full border border-sage/35 bg-sage/10 drop-shadow-[0_0_25px_rgba(156,175,136,0.4)]"
           animate={{ scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
