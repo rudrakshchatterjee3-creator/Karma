@@ -1237,6 +1237,12 @@ function TodayView({
   );
 }
 
+type EstimateState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "done"; carbon: number; points: number; note: string; confidence: "low" | "medium" | "high"; category: string }
+  | { status: "error" };
+
 function TrackView({
   selectedCategory,
   setSelectedCategory,
@@ -1246,24 +1252,64 @@ function TrackView({
   setSelectedCategory: (category: Category) => void;
   addLog: (entry: Omit<LogEntry, "id" | "createdAt">) => void;
 }) {
-  const [manual, setManual] = useState<ManualLogDraft>({
-    label: "",
-    carbon: 0,
-    points: 0,
-    note: "",
-  });
+  const [label, setLabel] = useState("");
+  const [customNote, setCustomNote] = useState("");
+  const [estimate, setEstimate] = useState<EstimateState>({ status: "idle" });
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced API call whenever label changes
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!label.trim() || label.trim().length < 6) {
+      setEstimate({ status: "idle" });
+      return;
+    }
+    setEstimate({ status: "loading" });
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ actionText: label, category: selectedCategory }),
+        });
+        if (!res.ok) throw new Error("API error");
+        const data = await res.json() as {
+          carbon: number; points: number; note: string;
+          confidence: "low" | "medium" | "high"; category: string;
+        };
+        setEstimate({ status: "done", ...data });
+        // Auto-suggest category if detected differs from selected
+        if (data.category && data.category !== selectedCategory) {
+          setSelectedCategory(data.category as Category);
+        }
+      } catch {
+        setEstimate({ status: "error" });
+      }
+    }, 600);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [label]);
 
   function submitManualLog() {
-    if (!manual.label.trim()) return;
+    if (!label.trim()) return;
+    const est = estimate.status === "done" ? estimate : null;
     addLog({
       category: selectedCategory,
-      label: manual.label,
-      carbon: manual.carbon,
-      points: manual.points,
-      note: manual.note || "Manually logged entry.",
+      label,
+      carbon: est?.carbon ?? 0,
+      points: est?.points ?? 0,
+      note: customNote.trim() || est?.note || "Manually logged entry.",
     });
-    setManual({ label: "", carbon: 0, points: 0, note: "" });
+    setLabel("");
+    setCustomNote("");
+    setEstimate({ status: "idle" });
   }
+
+  const confidenceColor: Record<string, string> = {
+    high: "text-sage border-sage/30 bg-sage/8",
+    medium: "text-amber-300 border-amber-300/30 bg-amber-300/8",
+    low: "text-white/45 border-white/15 bg-white/[0.03]",
+  };
 
   return (
     <div className="space-y-5">
@@ -1302,41 +1348,142 @@ function TrackView({
           ))}
         </div>
       </section>
+
+      {/* ── SMART MANUAL ENTRY ─────────────────────────────────── */}
       <section className="panel p-5">
-        <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm text-white/45">Manual entry</p>
-            <h2 className="text-2xl font-semibold">Add your own carbon event</h2>
+            <p className="text-sm text-white/45">Smart entry</p>
+            <h2 className="text-2xl font-semibold">Describe what happened</h2>
           </div>
-          <span className="metric-pill">Karma will estimate the impact automatically</span>
+          <div className="flex items-center gap-1.5 rounded-full border border-sky-300/25 bg-sky-300/8 px-3 py-1.5 text-xs text-sky-300">
+            <Sparkles size={12} />
+            AI estimates impact
+          </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-[1fr]">
-          <Field label="What happened?">
+
+        <Field label="What happened? (be specific — include distance, hours, or count)">
+          <div className="relative">
+            <input
+              className="input pr-10"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && estimate.status === "done" && submitManualLog()}
+              placeholder="e.g. Rode bike 15 km on petrol · AC on for 4 hours at 24°C · Ordered 2 meals from Swiggy"
+            />
+            {estimate.status === "loading" && (
+              <motion.div
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              >
+                <Sparkles size={16} className="text-sage" />
+              </motion.div>
+            )}
+          </div>
+        </Field>
+
+        {/* Live estimate preview */}
+        <AnimatePresence mode="wait">
+          {estimate.status === "loading" && (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+            >
+              <div className="flex items-center gap-3 text-sm text-white/45">
+                <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.2, repeat: Infinity }}>
+                  <Sparkles size={16} className="text-sage" />
+                </motion.div>
+                Analysing emissions…
+              </div>
+            </motion.div>
+          )}
+
+          {estimate.status === "done" && (
+            <motion.div
+              key="estimate"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3 }}
+              className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
+            >
+              {/* Estimate header */}
+              <div className="flex flex-wrap items-center gap-3 border-b border-white/8 px-4 py-3">
+                <Sparkles size={14} className="text-sage" />
+                <span className="text-xs font-medium uppercase tracking-[0.16em] text-white/50">Estimated impact</span>
+                <span className={`ml-auto rounded-full border px-2.5 py-0.5 text-xs font-medium ${confidenceColor[estimate.confidence]}`}>
+                  {estimate.confidence} confidence
+                </span>
+              </div>
+
+              {/* Carbon + points */}
+              <div className="grid grid-cols-2 divide-x divide-white/8">
+                <div className="px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-white/38 mb-1">CO2e impact</p>
+                  <p className={`font-outfit text-2xl font-medium tracking-tight ${estimate.carbon < 0 ? "text-sage" : "text-coral"}`}>
+                    {carbon(estimate.carbon)}
+                  </p>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-white/38 mb-1">Karma points</p>
+                  <p className={`font-outfit text-2xl font-medium tracking-tight ${estimate.points > 0 ? "text-sage" : "text-coral"}`}>
+                    {formatPoints(estimate.points)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Explanation */}
+              <div className="border-t border-white/8 px-4 py-3">
+                <p className="text-xs leading-5 text-white/55">{estimate.note}</p>
+              </div>
+            </motion.div>
+          )}
+
+          {estimate.status === "error" && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mt-4 rounded-2xl border border-coral/20 bg-coral/5 px-4 py-3 text-sm text-coral"
+            >
+              Could not estimate impact. The log will still be saved.
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Optional custom note */}
+        <div className="mt-4">
+          <Field label="Add a personal note (optional)">
             <input
               className="input"
-              value={manual.label}
-              onChange={(e) => setManual((current) => ({ ...current, label: e.target.value }))}
-              placeholder="Example: AC at 26°C for 3 hours"
+              value={customNote}
+              onChange={(e) => setCustomNote(e.target.value)}
+              placeholder="Why this choice mattered today…"
             />
           </Field>
         </div>
-        <div className="mt-4 grid gap-4 md:grid-cols-[1fr_auto]">
-          <Field label="Why it matters">
-            <input
-              className="input"
-              value={manual.note}
-              onChange={(e) => setManual((current) => ({ ...current, note: e.target.value }))}
-              placeholder="Example: Efficient cooling, lower energy demand."
-            />
-          </Field>
-          <button className="primary-button self-end justify-center" onClick={submitManualLog}>
-            Add manual log <Plus size={18} />
-          </button>
-        </div>
+
+        {/* Submit */}
+        <button
+          className="primary-button mt-5 w-full justify-center disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={submitManualLog}
+          disabled={!label.trim()}
+        >
+          {estimate.status === "done"
+            ? `Log ${carbon(estimate.carbon)} · ${formatPoints(estimate.points)}`
+            : "Log entry"}
+          <Plus size={18} />
+        </button>
       </section>
     </div>
   );
 }
+
 
 function InsightsView({ profile, logs, actions }: { profile: Profile; logs: LogEntry[]; actions: Action[] }) {
   const top = actions.find(a => a.status !== "dismissed") ?? actions[0];
