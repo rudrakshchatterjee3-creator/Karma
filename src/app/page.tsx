@@ -442,10 +442,11 @@ export default function KarmaApp() {
     const StoryIcon = (LucideIcons[story.iconName as keyof typeof LucideIcons] || LucideIcons.Sparkles) as React.ElementType;
 
     return (
-      <main className="min-h-screen overflow-hidden bg-background text-foreground">
+      <main className="min-h-screen overflow-hidden bg-background text-foreground relative">
         <div className={`app-shell ${isLightMode ? "theme-light" : ""}`}>
-        <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
-          <Header compact profile={state.profile} isLightMode={isLightMode} toggleTheme={toggleTheme} />
+        <ThemeToggle isLightMode={isLightMode} toggleTheme={toggleTheme} />
+        <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8 relative">
+          <Header compact profile={state.profile} />
           
           <section className="flex flex-1 flex-col items-center justify-center py-12">
             <div className="w-full max-w-2xl space-y-8">
