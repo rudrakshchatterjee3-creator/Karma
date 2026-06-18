@@ -17,8 +17,12 @@ export async function GET() {
   }
 
   const key = `user:${session.user.email}`;
-  const data = await kv.get(key, "json");
-  return NextResponse.json(data || {});
+  try {
+    const data = await kv.get(key, "json");
+    return NextResponse.json(data || {});
+  } catch (err: any) {
+    return NextResponse.json({ error: "KV GET Failed", details: err.message, stack: err.stack, type: typeof kv, keys: Object.keys(kv || {}) }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
@@ -34,7 +38,10 @@ export async function POST(req: Request) {
   }
 
   const key = `user:${session.user.email}`;
-  await kv.put(key, JSON.stringify(body));
-
-  return NextResponse.json({ success: true });
+  try {
+    await kv.put(key, JSON.stringify(body));
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: "KV PUT Failed", details: err.message, stack: err.stack, type: typeof kv, keys: Object.keys(kv || {}) }, { status: 500 });
+  }
 }
