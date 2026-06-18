@@ -272,8 +272,105 @@ export function createActions(profile: Profile, logs: LogEntry[]): Action[] {
 
   const candidates: Omit<Action, "score" | "status">[] = [];
 
-  // 1. AC efficiency: only if acHours > 0
-  if (profile.acHours > 0) {
+  // ── DYNAMIC ACTIONS SCANNED FROM RECENT LOGS ────────────────────────────────
+  
+  // 1. Long diesel trip check
+  const hasDieselTrip = logs.some(
+    (log) => log.category === "transport" && log.label.toLowerCase().includes("diesel") && log.carbon > 12
+  );
+  if (hasDieselTrip) {
+    candidates.push({
+      id: "diesel-mitigation",
+      category: "transport",
+      title: "Offset diesel vehicle emissions",
+      why: "You logged a long diesel trip. Diesel engines produce higher particulates and nitrogen oxides per km compared to other transits.",
+      step: "For routes over 40 km, coordinate a shared carpool or pre-book a rail ticket.",
+      effort: "medium",
+      carbon: 12.0,
+      points: 1200,
+    });
+  }
+
+  // 2. High transport emissions fallback (if no specific diesel trip)
+  const transportCarbon = categoryCarbon["transport"] || 0;
+  if (transportCarbon > 20 && !hasDieselTrip) {
+    candidates.push({
+      id: "commute-rationalize",
+      category: "transport",
+      title: "Consolidate transit routes",
+      why: "Your transport footprint is elevated. Grouping trips and swapping private cabs for public rail yields immediate savings.",
+      step: "Merge your next three local errands into a single loop, or swap two cab trips for the metro.",
+      effort: "low",
+      carbon: 6.5,
+      points: 650,
+    });
+  }
+
+  // 3. Repeated food delivery check
+  const deliveryLogs = logs.filter(
+    (log) =>
+      log.category === "food" &&
+      (log.label.toLowerCase().includes("order") ||
+        log.label.toLowerCase().includes("delivery") ||
+        log.label.toLowerCase().includes("swiggy") ||
+        log.label.toLowerCase().includes("zomato"))
+  );
+  if (deliveryLogs.length >= 2) {
+    candidates.push({
+      id: "delivery-reduce",
+      category: "food",
+      title: "Batch cook dinners to avoid delivery waste",
+      why: "You logged multiple food deliveries. Upstream cooking, packaging plastic, and courier transit multiply packaging waste.",
+      step: "Cook one simple batch meal (e.g. dal or fried rice) to cover two dinners this week.",
+      effort: "medium",
+      carbon: 4.8,
+      points: 480,
+    });
+  }
+
+  // 4. Large AC cooling carbon check
+  const hasHighAcUsage = logs.some(
+    (log) => log.category === "energy" && log.label.toLowerCase().includes("ac") && log.carbon > 3.5
+  );
+  if (hasHighAcUsage) {
+    candidates.push({
+      id: "ac-timer-fallback",
+      category: "energy",
+      title: "Activate AC sleep timer pre-dawn",
+      why: "Cooling is a major electricity driver. Sleep timers prevent the compressor running in the naturally cooler pre-dawn hours.",
+      step: "Program your AC to turn off automatically at 4:00 AM tonight, letting the ceiling fan run.",
+      effort: "low",
+      carbon: 3.2,
+      points: 320,
+    });
+  }
+
+  // 5. Waste generation logged
+  const hasWasteLogs = logs.some(
+    (log) =>
+      log.category === "waste" &&
+      (log.label.toLowerCase().includes("waste") ||
+        log.label.toLowerCase().includes("plastic") ||
+        log.label.toLowerCase().includes("threw") ||
+        log.label.toLowerCase().includes("food waste"))
+  );
+  if (hasWasteLogs) {
+    candidates.push({
+      id: "organic-compost-fallback",
+      category: "waste",
+      title: "Separate organic waste for local composting",
+      why: "Mixed landfill waste generates potent greenhouse methane. Composting avoids this entirely.",
+      step: "Set aside a small covered container solely for kitchen food scraps this week.",
+      effort: "low",
+      carbon: 2.5,
+      points: 250,
+    });
+  }
+
+  // ── STANDARD PROFILE-BASED ACTIONS ──────────────────────────────────────────
+
+  // AC efficiency (if profile acHours > 0 and not already covered by high AC usage)
+  if (profile.acHours > 0 && !hasHighAcUsage) {
     candidates.push({
       id: "ac-24-fan",
       category: "energy",
@@ -286,8 +383,8 @@ export function createActions(profile: Profile, logs: LogEntry[]): Action[] {
     });
   }
 
-  // 2. Transport swap: only if motorized commute
-  if (profile.commuteKm > 0 && profile.commuteMode !== "walk" && profile.commuteMode !== "bike") {
+  // Transport swap (if motorized commute and not already covered by high transport emissions)
+  if (profile.commuteKm > 0 && profile.commuteMode !== "walk" && profile.commuteMode !== "bike" && transportCarbon <= 20) {
     candidates.push({
       id: "commute-swap",
       category: "transport",
@@ -300,8 +397,8 @@ export function createActions(profile: Profile, logs: LogEntry[]): Action[] {
     });
   }
 
-  // 3. Food deliveries: only if deliveries > 0
-  if (profile.deliveries > 0) {
+  // Food deliveries (if deliveries > 0 and not already covered by repeated deliveries)
+  if (profile.deliveries > 0 && deliveryLogs.length < 2) {
     const foodTitle = profile.diet === "high-meat"
       ? "Replace two meat-heavy deliveries with a home-cooked meal"
       : "Replace two delivery dinners with one planned meal batch";
@@ -317,7 +414,7 @@ export function createActions(profile: Profile, logs: LogEntry[]): Action[] {
     });
   }
 
-  // 4. Shopping pause
+  // Shopping pause
   candidates.push({
     id: "order-pause",
     category: "shopping",
@@ -329,17 +426,19 @@ export function createActions(profile: Profile, logs: LogEntry[]): Action[] {
     points: 320,
   });
 
-  // 5. Dry waste setup
-  candidates.push({
-    id: "dry-waste",
-    category: "waste",
-    title: "Set up one dry-waste bag near the kitchen",
-    why: "Segregation fails when it needs effort. A visible dry bag makes the right action automatic.",
-    step: "Keep one paper or cloth bag only for dry packaging this week.",
-    effort: "low",
-    carbon: 1.8,
-    points: 180,
-  });
+  // Dry waste setup (if not already composting)
+  if (!hasWasteLogs) {
+    candidates.push({
+      id: "dry-waste",
+      category: "waste",
+      title: "Set up one dry-waste bag near the kitchen",
+      why: "Segregation fails when it needs effort. A visible dry bag makes the right action automatic.",
+      step: "Keep one paper or cloth bag only for dry packaging this week.",
+      effort: "low",
+      carbon: 1.8,
+      points: 180,
+    });
+  }
 
   return candidates
     .map((action) => ({

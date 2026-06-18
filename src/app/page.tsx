@@ -195,11 +195,89 @@ export default function KarmaApp() {
     }
   }, [hydrated, state]);
 
+  const [coachReport, setCoachReport] = useState<{
+    headline: string;
+    summary: string;
+    actions: Action[];
+    sourceEngine: "nvidia_nim" | "physics_engine";
+  } | null>(null);
+  const [coachLoading, setCoachLoading] = useState(false);
+
+  useEffect(() => {
+    if (!state.onboarded || (tab !== "insights" && tab !== "plan")) return;
+
+    let active = true;
+    async function fetchCoachReport() {
+      setCoachLoading(true);
+      try {
+        const res = await fetch("/api/coach", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profile: state.profile, logs: state.logs }),
+        });
+        if (!res.ok) throw new Error("Coach API failed");
+        const data = await res.json() as {
+          headline: string;
+          summary: string;
+          actions: any[];
+          sourceEngine: "nvidia_nim" | "physics_engine";
+        };
+        if (!active) return;
+        
+        const actionsMapped: Action[] = data.actions.map((action, index) => {
+          const previous = state.actions.find((item) => item.id === action.id);
+          return {
+            id: action.id,
+            category: action.category,
+            title: action.title,
+            why: action.why,
+            step: action.step,
+            effort: action.effort,
+            carbon: action.carbon,
+            points: action.points,
+            status: previous?.status ?? (index === 0 ? "active" : "suggested"),
+            score: 100,
+          };
+        });
+
+        setCoachReport({
+          headline: data.headline,
+          summary: data.summary,
+          actions: actionsMapped,
+          sourceEngine: data.sourceEngine,
+        });
+      } catch (err) {
+        console.error("Failed to load AI Coach:", err);
+      } finally {
+        if (active) setCoachLoading(false);
+      }
+    }
+
+    fetchCoachReport();
+    return () => {
+      active = false;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, state.logs, state.onboarded]);
+
+  const renderedActions = useMemo(() => {
+    if (coachReport) {
+      return coachReport.actions.map((action) => {
+        const currentActionState = state.actions.find((a) => a.id === action.id);
+        return {
+          ...action,
+          status: currentActionState?.status ?? action.status,
+        };
+      });
+    }
+    return state.actions;
+  }, [coachReport, state.actions]);
+
   const totalCarbon = useMemo(() => state.logs.reduce((sum, log) => sum + log.carbon, 0), [state.logs]);
   const totalPoints = useMemo(() => state.logs.reduce((sum, log) => sum + log.points, 0), [state.logs]);
   const avoidedCarbon = useMemo(() => Math.abs(state.logs.filter((log) => log.carbon < 0).reduce((sum, log) => sum + log.carbon, 0)), [state.logs]);
   const earnedPoints = useMemo(() => state.logs.filter((log) => log.points > 0).reduce((sum, log) => sum + log.points, 0), [state.logs]);
-  const activeAction = state.actions.find((action) => action.status === "active") ?? state.actions.find((a) => a.status === "suggested");
+  const activeAction = renderedActions.find((action) => action.status === "active") ?? renderedActions.find((a) => a.status === "suggested");
   const storyCards = useMemo(() => getStoryCards(state.profile), [state.profile]);
 
   useEffect(() => {
@@ -526,8 +604,22 @@ export default function KarmaApp() {
                   addLog={addLog}
                 />
               )}
-              {tab === "insights" && <InsightsView profile={state.profile} logs={state.logs} actions={state.actions} />}
-              {tab === "plan" && <PlanView actions={state.actions} setActionStatus={setActionStatus} />}
+              {tab === "insights" && (
+                <InsightsView
+                  profile={state.profile}
+                  logs={state.logs}
+                  actions={renderedActions}
+                  coachReport={coachReport}
+                  coachLoading={coachLoading}
+                />
+              )}
+              {tab === "plan" && (
+                <PlanView
+                  actions={renderedActions}
+                  setActionStatus={setActionStatus}
+                  coachLoading={coachLoading}
+                />
+              )}
               {tab === "recap" && (
                 <RecapView
                   profile={state.profile}
@@ -1500,7 +1592,23 @@ function TrackView({
 }
 
 
-function InsightsView({ profile, logs, actions }: { profile: Profile; logs: LogEntry[]; actions: Action[] }) {
+function InsightsView({
+  profile,
+  logs,
+  actions,
+  coachReport,
+  coachLoading,
+}: {
+  profile: Profile;
+  logs: LogEntry[];
+  actions: Action[];
+  coachReport: {
+    headline: string;
+    summary: string;
+    sourceEngine: "nvidia_nim" | "physics_engine";
+  } | null;
+  coachLoading: boolean;
+}) {
   const top = actions.find(a => a.status !== "dismissed") ?? actions[0];
   const categoryTotals = totalsByCategory(logs, "carbon");
   const sorted = (Object.entries(categoryTotals) as [Category, number][]).sort((a, b) => b[1] - a[1]);
@@ -1528,24 +1636,61 @@ function InsightsView({ profile, logs, actions }: { profile: Profile; logs: LogE
     <div className="space-y-5">
       <PageTitle eyebrow="Insights" title="Your weekly diagnosis is practical, not preachy." subtitle={`Based on ${householdText}'s logged choices with a ${dietText} diet in ${location}.`} />
       <section className="hero-panel p-5 sm:p-7">
-        <div className="mb-5 flex items-center gap-3">
-          <div className="icon-tile"><Sparkles size={22} /></div>
-          <div>
-            <p className="text-sm text-white/45">Karma Coach</p>
-            <h2 className="text-2xl font-semibold">
-              {firstName ? `${firstName}'s` : "Your"} {location} routine has one obvious first move.
-            </h2>
+        {coachLoading ? (
+          <div className="space-y-4 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-white/5" />
+              <div className="space-y-2 flex-1">
+                <div className="h-3.5 w-24 rounded bg-white/5" />
+                <div className="h-6 w-2/3 rounded bg-white/5" />
+              </div>
+            </div>
+            <div className="h-16 w-full rounded bg-white/5 mt-3" />
+            <div className="grid gap-3 sm:grid-cols-3 mt-4">
+              <div className="h-14 rounded bg-white/5" />
+              <div className="h-14 rounded bg-white/5" />
+              <div className="h-14 rounded bg-white/5" />
+            </div>
           </div>
-        </div>
-        <p className="max-w-3xl text-lg leading-8 text-white/72">
-          {top?.why ?? "Log more choices to unlock your personalized diagnosis."}{" "}
-          {top && <>Start with &quot;{top.title}&quot; because it matches your motivation, repeats weekly, and has a visible benefit within seven days.</>}
-        </p>
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <MiniStat label="Confidence" value="Medium" />
-          <MiniStat label="Best next step" value={top?.effort === "low" ? "Under 10 min" : "Plan once"} />
-          <MiniStat label="Estimated upside" value={`${formatPoints(top?.points ?? 0)} / week`} />
-        </div>
+        ) : (
+          <>
+            <div className="mb-5 flex items-center gap-3">
+              <div className="icon-tile"><Sparkles size={22} /></div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-white/45">Karma Coach</p>
+                  {coachReport && (
+                    coachReport.sourceEngine === "nvidia_nim" ? (
+                      <span className="rounded-full border border-[#76b900]/30 bg-[#76b900]/8 px-2 py-0.5 text-[9px] font-bold text-[#76b900] uppercase tracking-wider">
+                        NVIDIA NIM AI
+                      </span>
+                    ) : (
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-medium text-white/45 uppercase tracking-wider">
+                        Physics Engine
+                      </span>
+                    )
+                  )}
+                </div>
+                <h2 className="text-2xl font-semibold mt-1">
+                  {coachReport ? coachReport.headline : `${firstName ? `${firstName}'s` : "Your"} ${location} routine has one obvious first move.`}
+                </h2>
+              </div>
+            </div>
+            <p className="max-w-3xl text-lg leading-8 text-white/72">
+              {coachReport ? coachReport.summary : (
+                <>
+                  {top?.why ?? "Log more choices to unlock your personalized diagnosis."}{" "}
+                  {top && <>Start with &quot;{top.title}&quot; because it matches your motivation, repeats weekly, and has a visible benefit within seven days.</>}
+                </>
+              )}
+            </p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <MiniStat label="Analysis Confidence" value={coachReport && coachReport.sourceEngine === "nvidia_nim" ? "High" : "Medium"} />
+              <MiniStat label="Best next step" value={top?.effort === "low" ? "Under 10 min" : "Plan once"} />
+              <MiniStat label="Estimated upside" value={top ? `${formatPoints(top.points)} / week` : "—"} />
+            </div>
+          </>
+        )}
       </section>
       <section className="panel p-5">
         <h2 className="mb-5 text-2xl font-semibold">Category pressure</h2>
@@ -1572,12 +1717,43 @@ function InsightsView({ profile, logs, actions }: { profile: Profile; logs: LogE
   );
 }
 
-function PlanView({ actions, setActionStatus }: { actions: Action[]; setActionStatus: (id: string, status: Action["status"]) => void }) {
+function PlanView({
+  actions,
+  setActionStatus,
+  coachLoading,
+}: {
+  actions: Action[];
+  setActionStatus: (id: string, status: Action["status"]) => void;
+  coachLoading: boolean;
+}) {
   const visible = actions.filter((action) => action.status !== "dismissed");
   return (
     <div className="space-y-5">
       <PageTitle eyebrow="Plan" title="Three small moves. No heroic lifestyle change." subtitle="Actions are ranked by impact, ease, motivation match, and whether the habit repeats." />
-      {visible.length === 0 ? (
+      {coachLoading ? (
+        <div className="grid gap-4 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <section key={i} className="panel grid gap-5 p-5 md:grid-cols-[auto_1fr_auto] md:items-center">
+              <div className="h-14 w-14 rounded-2xl bg-white/5" />
+              <div className="space-y-3 flex-1">
+                <div className="flex gap-2">
+                  <div className="h-4 w-10 rounded bg-white/5" />
+                  <div className="h-4 w-12 rounded bg-white/5" />
+                  <div className="h-4 w-16 rounded bg-white/5" />
+                </div>
+                <div className="h-6 w-1/3 rounded bg-white/5" />
+                <div className="h-4 w-2/3 rounded bg-white/5" />
+                <div className="h-10 w-full rounded bg-white/5" />
+              </div>
+              <div className="flex flex-col gap-2 md:w-40">
+                <div className="h-8 rounded bg-white/5" />
+                <div className="h-8 rounded bg-white/5" />
+                <div className="h-8 rounded bg-white/5" />
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : visible.length === 0 ? (
         <div className="panel flex flex-col items-center gap-4 p-12 text-center">
           <Check size={32} className="text-sage" />
           <h2 className="text-xl font-semibold">All actions dismissed</h2>
