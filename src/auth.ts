@@ -3,6 +3,8 @@ if (typeof process === "undefined") {
   // @ts-ignore
   globalThis.process = { env: {} };
 } else if (!process.env) {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   process.env = {};
 }
 
