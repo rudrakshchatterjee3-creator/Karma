@@ -221,22 +221,22 @@ export default function KarmaApp() {
         const data = await res.json() as {
           headline: string;
           summary: string;
-          actions: Record<string, unknown>[];
+          actions: any[];
           sourceEngine: "nvidia_nim" | "physics_engine";
         };
         if (!active) return;
         
-        const actionsMapped: Action[] = data.actions.map((action, index) => {
+        const actionsMapped: Action[] = data.actions.map((action: any, index: number) => {
           const previous = state.actions.find((item) => item.id === action.id);
           return {
-            id: action.id,
-            category: action.category,
-            title: action.title,
-            why: action.why,
-            step: action.step,
-            effort: action.effort,
-            carbon: action.carbon,
-            points: action.points,
+            id: action.id as string,
+            category: action.category as any,
+            title: action.title as string,
+            why: action.why as string,
+            step: action.step as string,
+            effort: action.effort as any,
+            carbon: action.carbon as number,
+            points: action.points as number,
             status: previous?.status ?? (index === 0 ? "active" : "suggested"),
             score: 100,
           };
