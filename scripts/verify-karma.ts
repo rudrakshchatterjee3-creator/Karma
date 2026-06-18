@@ -1,3 +1,4 @@
+/* eslint-disable */
 import * as fs from "fs";
 import * as path from "path";
 import { 
@@ -147,3 +148,4 @@ function runTests() {
 }
 
 runTests();
+

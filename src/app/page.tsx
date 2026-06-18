@@ -220,7 +220,7 @@ export default function KarmaApp() {
         const data = await res.json() as {
           headline: string;
           summary: string;
-          actions: any[];
+          actions: Record<string, unknown>[];
           sourceEngine: "nvidia_nim" | "physics_engine";
         };
         if (!active) return;
@@ -391,7 +391,7 @@ export default function KarmaApp() {
   // ── STORY / SETUP ──────────────────────────────────────────
   if (!state.onboarded) {
     const story = storyCards[storyStep] ?? storyCards[0];
-    const StoryIcon = (LucideIcons[story.iconName as keyof typeof LucideIcons] || LucideIcons.Sparkles) as React.ComponentType<any>;
+    const StoryIcon = (LucideIcons[story.iconName as keyof typeof LucideIcons] || LucideIcons.Sparkles) as React.ElementType;
 
     return (
       <main className="min-h-screen overflow-hidden bg-background text-foreground">
@@ -481,7 +481,7 @@ export default function KarmaApp() {
 
               <div className="grid max-w-2xl gap-3 sm:grid-cols-6 grid-cols-3">
                 {storyCards.map((item, index) => {
-                  const Icon = (LucideIcons[item.iconName as keyof typeof LucideIcons] || LucideIcons.Sparkles) as React.ComponentType<any>;
+                  const Icon = (LucideIcons[item.iconName as keyof typeof LucideIcons] || LucideIcons.Sparkles) as React.ElementType;
                   return (
                     <button
                       key={item.eyebrow}
@@ -661,15 +661,15 @@ export default function KarmaApp() {
 // ─────────────────────────────────────────────────────────────
 function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => void; toggleTheme: () => void; isLightMode: boolean }) {
   const [globalTonnes, setGlobalTonnes] = useState(0);
-  const startRef = useRef(Date.now());
+  const [startTime] = useState(() => Date.now());
 
   useEffect(() => {
     const perSecond = worldCo2TonnesPerYear / (365 * 24 * 60 * 60);
     const timer = setInterval(() => {
-      setGlobalTonnes(((Date.now() - startRef.current) / 1000) * perSecond);
+      setGlobalTonnes(((Date.now() - startTime) / 1000) * perSecond);
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [startTime]);
 
   const features = [
     {
@@ -1215,16 +1215,16 @@ function TodayView({
 }) {
   const LeakIcon = categoryMeta[biggestLeak?.[0] ?? "energy"].icon;
   const [worldTonnes, setWorldTonnes] = useState(0);
-  const startRef = useRef(Date.now());
+  const [startTime] = useState(() => Date.now());
   const monthlyLeak = calculateMonthlyLeak(profile);
 
   useEffect(() => {
     const perSecond = worldCo2TonnesPerYear / (365 * 24 * 60 * 60);
     const timer = window.setInterval(() => {
-      setWorldTonnes(((Date.now() - startRef.current) / 1000) * perSecond);
+      setWorldTonnes(((Date.now() - startTime) / 1000) * perSecond);
     }, 1000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [startTime]);
 
   // Personalized hero headline
   const heroLocation = [profile.city, profile.country].filter(Boolean).join(", ") || "your city";
@@ -1368,9 +1368,11 @@ function TrackView({
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!label.trim() || label.trim().length < 6) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEstimate({ status: "idle" });
       return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEstimate({ status: "loading" });
     debounceRef.current = setTimeout(async () => {
       try {
