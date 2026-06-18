@@ -411,8 +411,15 @@ export default function KarmaApp() {
     }));
   }
 
-  function resetData() {
+  async function resetData() {
     if (!window.confirm("Reset all data? This clears your footprint, logs, and profile.")) return;
+    
+    try {
+      await fetch("/api/sync", { method: "DELETE" });
+    } catch (e) {
+      console.error("Failed to delete KV data", e);
+    }
+    
     window.localStorage.removeItem(storageKey);
     setState(getInitialState());
     setTab("today");

@@ -20,8 +20,9 @@ export async function GET() {
   try {
     const data = await kv.get(key, "json");
     return NextResponse.json(data || {});
-  } catch (err: any) {
-    return NextResponse.json({ error: "KV GET Failed", details: err.message, stack: err.stack, type: typeof kv, keys: Object.keys(kv || {}) }, { status: 500 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    return NextResponse.json({ error: "KV GET Failed", details: error.message, stack: error.stack, type: typeof kv, keys: Object.keys(kv || {}) }, { status: 500 });
   }
 }
 
@@ -41,7 +42,29 @@ export async function POST(req: Request) {
   try {
     await kv.put(key, JSON.stringify(body));
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: "KV PUT Failed", details: err.message, stack: err.stack, type: typeof kv, keys: Object.keys(kv || {}) }, { status: 500 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    return NextResponse.json({ error: "KV PUT Failed", details: error.message, stack: error.stack, type: typeof kv, keys: Object.keys(kv || {}) }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const kv = process.env.KARMA_DATA as unknown as KVNamespace;
+  if (!kv) {
+    return NextResponse.json({ error: "KV Not configured" }, { status: 503 });
+  }
+
+  const key = `user:${session.user.email}`;
+  try {
+    await kv.delete(key);
+    return NextResponse.json({ success: true });
+  } catch (err: unknown) {
+    const error = err as Error;
+    return NextResponse.json({ error: "KV DELETE Failed", details: error.message, stack: error.stack }, { status: 500 });
   }
 }
