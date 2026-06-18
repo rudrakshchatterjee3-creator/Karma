@@ -232,203 +232,229 @@ export async function POST(request: Request) {
     const assumptions: string[] = [];
 
     // ── TRANSPORT ─────────────────────────────────────────────────────────────
-    const isBike = /\b(bike|motorcycle|motorbike|scooty|scooter|moto)\b/.test(t);
-    const isCar  = /\b(car|suv|sedan|hatchback|drove|drive)\b/.test(t);
-    const isCab  = /\b(cab|taxi|ola|uber|rapido|auto)\b/.test(t);
-    const isMetro= /\b(metro|train|local train|subway|rail)\b/.test(t);
-    const isBus  = /\b(bus|shuttle|minibus)\b/.test(t);
-    const isFlight=/\b(flight|flew|fly|airplane|plane)\b/.test(t);
-    const isWalk = /\b(walk|walked|walking|stroll)\b/.test(t);
-    const isCycle= /\b(cycle|bicycle|cycling|e-bike|ebike)\b/.test(t);
-
-    const isTransport = isBike || isCar || isCab || isMetro || isBus || isFlight || isWalk || isCycle;
-
-    // ── ENERGY ────────────────────────────────────────────────────────────────
-    const isAC    = /\b(ac|air.?con(?:ditioner)?|cooling)\b/.test(t);
-    const isFan   = /\b(fan|ceiling fan)\b/.test(t);
-    const isHeater= /\b(heater|heating|room heat)\b/.test(t);
-    const isTV    = /\b(tv|television|screen)\b/.test(t);
-    const isLaptop= /\b(laptop|computer|pc)\b/.test(t);
-    const isWash  = /\b(washing machine|wash(?:ed)? clothes|laundry)\b/.test(t);
-    const isEnergy= isAC || isFan || isHeater || isTV || isLaptop || isWash;
-
-    // ── FOOD ──────────────────────────────────────────────────────────────────
-    const isBeef  = /\b(beef|burger|steak|mutton|lamb|red meat)\b/.test(t);
-    const isChicken=/\b(chicken|poultry)\b/.test(t);
-    const isFish  = /\b(fish|seafood|prawn|shrimp)\b/.test(t);
-    const isVeg   = /\b(veg(?:an)?|vegetarian|salad|daal|lentil|tofu|plant)\b/.test(t);
-    const isDelivery=/\b(order(?:ed)?|deliver(?:y|ed)?|swiggy|zomato|takeout|takeaway)\b/.test(t);
-    const isFoodWaste=/\b(wast(?:ed?|e)|threw|throw|trash|leftover|rott)\b/.test(t);
-    const isFood  = isBeef || isChicken || isFish || isVeg || isDelivery || isFoodWaste;
-
-    // ── SHOPPING ──────────────────────────────────────────────────────────────
-    const isShopping=/\b(bought|buy|purchase|cloth(?:es|ing)?|shirt|shoe|appli(?:ance)?|gadget|phone|tv|amazon|flipkart)\b/.test(t);
-
-    // ── WASTE / GOOD HABITS ───────────────────────────────────────────────────
-    const isCompost= /\b(compost(?:ed)?)\b/.test(t);
-    const isRecycle= /\b(recycl(?:ed)?|segregat(?:ed)?|sorted)\b/.test(t);
-    const isReuse  = /\b(reusabl|reuse[d]?|bottle|refill)\b/.test(t);
-
+    const isBike = /\b(bike|motorcycle|motorbike|scooty|scooter|moto|splendor|activa|bullet|pulsar|vespa)\b/.test(t);
+    const isCar  = /\b(car|suv|sedan|hatchback|drove|drive|driving|jeep|innova|swift|creta|nexon|thar)\b/.test(t);
+    const isCab  = /\b(cab|taxi|ola|uber|rapido|auto|rickshaw|tuk.?tuk)\b/.test(t);
+    const isMetro= /\b(metro|train|local train|subway|rail|railway|tram)\b/.test(t);
+    const isBus  = /\b(bus|shuttle|minibus|volvo|coach)\b/.test(t);
+    const isFlight=/\b(flight|flew|fly|airplane|plane|airport|airline|indigo|air india|vistara|spicejet)\b/.test(t);
+    const isWalk = /\b(walk|walked|walking|stroll|ran|running|jog|jogging|hike|hiking)\b/.test(t);
+    const isCycle= /\b(cycle|bicycle|cycling|e-bike|ebike|pedal)\b/.test(t);
+    
     // ── Fuel type modifiers ───────────────────────────────────────────────────
     const isE20   = /\b(e20|ethanol|flex.?fuel)\b/.test(t);
-    const isEV    = /\b(ev|electric|e-(?:bike|car|scooter))\b/.test(t);
-    const isFast  = /\b(fast|race|100\s*(?:kmph|kph)|high.?speed)\b/.test(t);
+    const isEV    = /\b(ev|electric|e-(?:bike|car|scooter)|tesla|ather|ola s1|nexon ev)\b/.test(t);
+    const isFast  = /\b(fast|race|100\s*(?:kmph|kph)|high.?speed|speeding)\b/.test(t);
+
+    const isTransport = isBike || isCar || isCab || isMetro || isBus || isFlight || isWalk || isCycle || isEV;
+
+    // ── ENERGY ────────────────────────────────────────────────────────────────
+    const isAC    = /\b(ac|air.?con(?:ditioner)?|cooling|split ac|window ac|hvac)\b/.test(t);
+    const isFan   = /\b(fan|ceiling fan|pedestal fan|table fan|exhaust fan)\b/.test(t);
+    const isHeater= /\b(heater|heating|room heat|geyser|water heater|boiler)\b/.test(t);
+    const isTV    = /\b(tv|television|screen|monitor|projector|led tv|smart tv)\b/.test(t);
+    const isLaptop= /\b(laptop|computer|pc|macbook|ipad|tablet|desktop|gaming pc|playstation|ps4|ps5|xbox|console)\b/.test(t);
+    const isWash  = /\b(washing machine|wash(?:ed)? clothes|laundry|dryer|dishwasher)\b/.test(t);
+    const isLight = /\b(light|bulb|lamp|led|tube.?light|cfl)\b/.test(t);
+    const isKitchenAppliance = /\b(microwave|oven|induction|stove|fridge|refrigerator|mixer|grinder|blender|air.?fryer|kettle|coffee maker)\b/.test(t);
+    const isEnergy= isAC || isFan || isHeater || isTV || isLaptop || isWash || isLight || isKitchenAppliance;
+
+    // ── FOOD ──────────────────────────────────────────────────────────────────
+    const isBeef  = /\b(beef|burger|steak|mutton|lamb|red meat|pork|bacon|ham|sausage)\b/.test(t);
+    const isChicken=/\b(chicken|poultry|turkey|nuggets|wings)\b/.test(t);
+    const isFish  = /\b(fish|seafood|prawn|shrimp|crab|lobster|sushi|salmon|tuna)\b/.test(t);
+    const isDairy = /\b(cheese|milk|butter|paneer|yogurt|curd|ice.?cream)\b/.test(t);
+    const isVeg   = /\b(veg(?:an)?|vegetarian|salad|daal|dal|lentil|tofu|plant|rice|roti|bread|fruit|apple|banana|vegetable|potato|tomato|onion)\b/.test(t);
+    const isDelivery=/\b(order(?:ed)?|deliver(?:y|ed)?|swiggy|zomato|takeout|takeaway|blinkit|zepto|instamart)\b/.test(t);
+    const isFoodWaste=/\b(wast(?:ed?|e)|threw|throw|trash|leftover|rott|expired|spoiled|garbage|bin)\b/.test(t);
+    const isFood  = isBeef || isChicken || isFish || isDairy || isVeg || isDelivery || isFoodWaste;
+
+    // ── SHOPPING ──────────────────────────────────────────────────────────────
+    const isShopping=/\b(bought|buy|purchase|cloth(?:es|ing)?|shirt|shoe|appli(?:ance)?|gadget|phone|tv|amazon|flipkart|myntra|zara|h&m|ikea|furniture|toy|book|cosmetic|makeup)\b/.test(t);
+
+    // ── WASTE / GOOD HABITS ───────────────────────────────────────────────────
+    const isCompost= /\b(compost(?:ed)?|organic waste)\b/.test(t);
+    const isRecycle= /\b(recycl(?:ed)?|segregat(?:ed)?|sorted|dry waste|wet waste|scrap)\b/.test(t);
+    const isReuse  = /\b(reusabl|reuse[d]?|bottle|refill|upcycle|mend|repair|fix|second.?hand|thrift)\b/.test(t);
+    
+    // Check if the input is purely unclassified/gibberish
+    const hasAnyRecognizedContext = isTransport || isEnergy || isFood || isShopping || isCompost || isRecycle || isReuse;
 
     // ── CALCULATION ───────────────────────────────────────────────────────────
 
-    if (isTransport) {
-      detectedCategory = 'transport';
-      const km = extractNumber(t, KM_PATTERNS);
+    if (hasAnyRecognizedContext) {
+      if (isTransport) {
+        detectedCategory = 'transport';
+        const km = extractNumber(t, KM_PATTERNS);
 
-      if (isFlight) {
-        const dist = km ?? 500; // assume 500km if unspecified
-        carbonKg = dist * EF.flight_short;
-        note = `Flight of ~${dist} km estimated at ${EF.flight_short} kg CO2e/km (short-haul IPCC AR6).`;
-        confidence = km ? 'high' : 'medium';
-        if (!km) assumptions.push('Distance assumed 500 km — update for accuracy.');
-      } else if (isWalk || isCycle || isEV) {
-        carbonKg = 0;
-        note = isEV
-          ? 'Electric vehicle — near-zero tailpipe emissions on Indian grid mix.'
-          : 'Walking or cycling produces zero direct emissions. Well done.';
-        confidence = 'high';
-        carbonKg = isEV ? -0.5 : -(km ?? 3) * 0.03; // relative saving vs car
-        assumptions.push(`Saving vs. equivalent petrol car trip of ~${km ?? 3} km.`);
-      } else if (isBike) {
-        const dist = km ?? 10;
-        let ef = EF.petrol_bike;
-        if (isE20) { ef = EF.e20_bike; assumptions.push('E20 fuel blend reduces CO2 ~10% vs pure petrol.'); }
-        if (isFast) { ef = EF.petrol_bike_high; assumptions.push('High-speed riding increases fuel burn ~25%.'); }
-        carbonKg = dist * ef;
-        note = `${dist} km on bike (${isE20 ? 'E20' : 'petrol'}${isFast ? ', high-speed' : ''}): ${ef} kg CO2e/km.`;
-        confidence = km ? 'high' : 'medium';
-        if (!km) assumptions.push('Distance assumed 10 km — mention "X km" for better accuracy.');
-      } else if (isCar) {
-        const dist = km ?? 15;
-        carbonKg = dist * EF.car_petrol;
-        note = `${dist} km by car: ${EF.car_petrol} kg CO2e/km (petrol).`;
-        confidence = km ? 'high' : 'medium';
-        if (!km) assumptions.push('Distance assumed 15 km — mention "X km" for better accuracy.');
-      } else if (isCab) {
-        const dist = km ?? 10;
-        const ef = t.includes('auto') ? EF.auto : EF.cab_taxi;
-        carbonKg = dist * ef;
-        note = `${dist} km by ${t.includes('auto') ? 'auto' : 'cab'}: ${ef} kg CO2e/km.`;
-        confidence = km ? 'high' : 'medium';
-        if (!km) assumptions.push('Distance assumed 10 km — mention "X km" for better accuracy.');
-      } else if (isMetro) {
-        const dist = km ?? 10;
-        carbonKg = -(dist * (EF.car_petrol - EF.metro)); // saving vs driving
-        note = `Metro for ${dist} km saves ~${Math.abs(carbonKg).toFixed(2)} kg CO2e vs driving.`;
-        confidence = km ? 'high' : 'medium';
-        if (!km) assumptions.push('Distance assumed 10 km.');
-      } else if (isBus) {
-        const dist = km ?? 10;
-        carbonKg = dist * EF.bus;
-        note = `${dist} km by bus: ${EF.bus} kg CO2e/km.`;
-        confidence = km ? 'medium' : 'low';
-        if (!km) assumptions.push('Distance assumed 10 km.');
+        if (isFlight) {
+          const dist = km ?? 500; // assume 500km if unspecified
+          carbonKg = dist * EF.flight_short;
+          note = `Flight of ~${dist} km estimated at ${EF.flight_short} kg CO2e/km.`;
+          confidence = km ? 'high' : 'medium';
+          if (!km) assumptions.push('Distance assumed 500 km — update for accuracy.');
+        } else if (isWalk || isCycle || isEV) {
+          carbonKg = 0;
+          note = isEV
+            ? 'Electric vehicle — near-zero tailpipe emissions on Indian grid mix.'
+            : 'Walking or cycling produces zero direct emissions. Well done.';
+          confidence = 'high';
+          carbonKg = isEV ? -0.5 : -(km ?? 3) * 0.03; // relative saving vs car
+          assumptions.push(`Saving vs. equivalent petrol car trip of ~${km ?? 3} km.`);
+        } else if (isBike) {
+          const dist = km ?? 10;
+          let ef = EF.petrol_bike;
+          if (isE20) { ef = EF.e20_bike; assumptions.push('E20 fuel blend reduces CO2 ~10% vs pure petrol.'); }
+          if (isFast) { ef = EF.petrol_bike_high; assumptions.push('High-speed riding increases fuel burn ~25%.'); }
+          carbonKg = dist * ef;
+          note = `${dist} km on bike (${isE20 ? 'E20' : 'petrol'}${isFast ? ', high-speed' : ''}): ${ef} kg CO2e/km.`;
+          confidence = km ? 'high' : 'medium';
+          if (!km) assumptions.push('Distance assumed 10 km — mention "X km" for better accuracy.');
+        } else if (isCar) {
+          const dist = km ?? 15;
+          carbonKg = dist * EF.car_petrol;
+          note = `${dist} km by car: ${EF.car_petrol} kg CO2e/km (petrol).`;
+          confidence = km ? 'high' : 'medium';
+          if (!km) assumptions.push('Distance assumed 15 km — mention "X km" for better accuracy.');
+        } else if (isCab) {
+          const dist = km ?? 10;
+          const ef = t.includes('auto') ? EF.auto : EF.cab_taxi;
+          carbonKg = dist * ef;
+          note = `${dist} km by ${t.includes('auto') ? 'auto' : 'cab'}: ${ef} kg CO2e/km.`;
+          confidence = km ? 'high' : 'medium';
+          if (!km) assumptions.push('Distance assumed 10 km — mention "X km" for better accuracy.');
+        } else if (isMetro) {
+          const dist = km ?? 10;
+          carbonKg = -(dist * (EF.car_petrol - EF.metro)); // saving vs driving
+          note = `Metro for ${dist} km saves ~${Math.abs(carbonKg).toFixed(2)} kg CO2e vs driving.`;
+          confidence = km ? 'high' : 'medium';
+          if (!km) assumptions.push('Distance assumed 10 km.');
+        } else if (isBus) {
+          const dist = km ?? 10;
+          carbonKg = dist * EF.bus;
+          note = `${dist} km by bus: ${EF.bus} kg CO2e/km.`;
+          confidence = km ? 'medium' : 'low';
+          if (!km) assumptions.push('Distance assumed 10 km.');
+        }
+
+      } else if (isEnergy) {
+        detectedCategory = 'energy';
+        const hrs = extractNumber(t, HOUR_PATTERNS) ?? 2;
+
+        if (isAC) {
+          const tons = t.match(/(\d+(?:\.\d+)?)\s*ton/) ? parseFloat(t.match(/(\d+(?:\.\d+)?)\s*ton/)![1]) : 1;
+          carbonKg = hrs * EF.ac_ton_hour * tons;
+          note = `AC (${tons}-ton) for ${hrs} hours: ${EF.ac_ton_hour} kg CO2e/hr × Indian grid.`;
+          confidence = 'high';
+        } else if (isHeater) {
+          carbonKg = hrs * EF.heater_hour;
+          note = `Heater/Geyser for ${hrs} hours: ${EF.heater_hour} kg CO2e/hr.`;
+          confidence = 'high';
+        } else if (isKitchenAppliance) {
+          carbonKg = hrs * 1.2; // approx 1.2 kg per hour for heavy kitchen appliances
+          note = `Kitchen appliance for ${hrs} hours: ~1.2 kg CO2e/hr.`;
+          confidence = 'medium';
+        } else if (isWash) {
+          const cycles = extractNumber(t, [/(\d+)\s*(load|cycle|wash)/i]) ?? 1;
+          carbonKg = cycles * EF.washing_cycle;
+          note = `${cycles} wash cycle(s): ${EF.washing_cycle} kg CO2e each.`;
+          confidence = 'medium';
+        } else if (isTV) {
+          carbonKg = hrs * EF.tv_hour;
+          note = `TV/Screen for ${hrs} hours: ${EF.tv_hour} kg CO2e/hr.`;
+          confidence = 'medium';
+        } else if (isLaptop) {
+          carbonKg = hrs * EF.laptop_hour;
+          note = `Device for ${hrs} hours: ${EF.laptop_hour} kg CO2e/hr.`;
+          confidence = 'medium';
+        } else if (isFan) {
+          carbonKg = hrs * EF.fan_hour;
+          note = `Fan for ${hrs} hours: ${EF.fan_hour} kg CO2e/hr.`;
+          confidence = 'high';
+        } else if (isLight) {
+          carbonKg = hrs * 0.01;
+          note = `Lighting for ${hrs} hours: ~0.01 kg CO2e/hr.`;
+          confidence = 'high';
+        }
+
+        if (t.includes('off') || t.includes('unplugged') || t.includes('saved')) {
+          carbonKg = -Math.abs(carbonKg);
+          note = 'Turning off / saving — converted to avoided emissions.';
+        }
+
+      } else if (isFood) {
+        detectedCategory = 'food';
+        const meals = extractNumber(t, [/(\d+)\s*meal/i, /(\d+)\s*order/i, /(\d+)\s*plate/i, /(\d+)\s*item/i]) ?? 1;
+
+        if (isBeef) {
+          carbonKg = meals * EF.beef_meal;
+          note = `${meals} heavy meat/beef meal(s): ${EF.beef_meal} kg CO2e each.`;
+          confidence = 'high';
+        } else if (isChicken) {
+          carbonKg = meals * EF.chicken_meal;
+          note = `${meals} poultry meal(s): ${EF.chicken_meal} kg CO2e each.`;
+          confidence = 'high';
+        } else if (isDairy) {
+          carbonKg = meals * 1.5; // approx 1.5kg for heavy dairy
+          note = `${meals} dairy-heavy meal(s): ~1.5 kg CO2e each.`;
+          confidence = 'medium';
+        } else if (isFish) {
+          carbonKg = meals * EF.fish_meal;
+          note = `${meals} seafood meal(s): ${EF.fish_meal} kg CO2e each.`;
+          confidence = 'medium';
+        } else if (isVeg) {
+          carbonKg = -(meals * (EF.chicken_meal - EF.veg_meal)); // saving vs meat
+          note = `${meals} plant-based meal(s): saves ${(EF.chicken_meal - EF.veg_meal).toFixed(1)} kg CO2e vs chicken.`;
+          confidence = 'high';
+        } else if (isDelivery) {
+          carbonKg = meals * EF.delivery_order;
+          note = `${meals} food delivery order(s): ${EF.delivery_order} kg CO2e each (packaging + rider).`;
+          confidence = 'medium';
+        } else if (isFoodWaste) {
+          carbonKg = meals * EF.waste_meal;
+          note = `${meals} wasted meal(s): ${EF.waste_meal} kg CO2e each (upstream emissions lost).`;
+          confidence = 'medium';
+        }
+
+      } else if (isShopping) {
+        detectedCategory = 'shopping';
+        const items = extractNumber(t, [/(\d+)\s*item/i, /(\d+)\s*piece/i, /(\d+)\s*pair/i]) ?? 1;
+        
+        let avgEF = EF.clothing_item;
+        if (/\b(phone|gadget|tv|appliance|laptop)\b/.test(t)) {
+          avgEF = EF.electronics_small;
+        } else if (/\b(furniture|sofa|bed)\b/.test(t)) {
+          avgEF = 40.0;
+        }
+
+        carbonKg = items * avgEF;
+        note = `${items} shopping item(s): ~${avgEF} kg CO2e each.`;
+        confidence = 'low';
+        assumptions.push(`Carbon estimate is averaged for this item type.`);
+
+      } else if (isCompost || isRecycle || isReuse) {
+        detectedCategory = 'waste';
+        if (isCompost) {
+          carbonKg = -0.5;
+          note = 'Composting avoids ~0.5 kg CO2e of methane emissions per session.';
+          confidence = 'medium';
+        } else if (isRecycle) {
+          carbonKg = -0.3;
+          note = 'Waste segregation enables recycling — estimated 0.3 kg CO2e avoided.';
+          confidence = 'medium';
+        } else {
+          carbonKg = -0.2;
+          note = 'Reusable/Repaired item avoids new production. Estimated 0.2 kg CO2e saved.';
+          confidence = 'medium';
+        }
       }
-
-    } else if (isEnergy) {
-      detectedCategory = 'energy';
-      const hrs = extractNumber(t, HOUR_PATTERNS) ?? 2;
-
-      if (isAC) {
-        const tons = t.match(/(\d+(?:\.\d+)?)\s*ton/) ? parseFloat(t.match(/(\d+(?:\.\d+)?)\s*ton/)![1]) : 1;
-        carbonKg = hrs * EF.ac_ton_hour * tons;
-        note = `AC (${tons}-ton) for ${hrs} hours: ${EF.ac_ton_hour} kg CO2e/hr × Indian grid.`;
-        confidence = 'high';
-      } else if (isFan) {
-        carbonKg = hrs * EF.fan_hour;
-        note = `Ceiling fan for ${hrs} hours: ${EF.fan_hour} kg CO2e/hr (75W).`;
-        confidence = 'high';
-      } else if (isHeater) {
-        carbonKg = hrs * EF.heater_hour;
-        note = `Room heater for ${hrs} hours: ${EF.heater_hour} kg CO2e/hr.`;
-        confidence = 'high';
-      } else if (isTV) {
-        carbonKg = hrs * EF.tv_hour;
-        note = `TV for ${hrs} hours: ${EF.tv_hour} kg CO2e/hr.`;
-        confidence = 'medium';
-      } else if (isLaptop) {
-        carbonKg = hrs * EF.laptop_hour;
-        note = `Laptop for ${hrs} hours: ${EF.laptop_hour} kg CO2e/hr.`;
-        confidence = 'medium';
-      } else if (isWash) {
-        const cycles = extractNumber(t, [/(\d+)\s*(load|cycle|wash)/i]) ?? 1;
-        carbonKg = cycles * EF.washing_cycle;
-        note = `${cycles} wash cycle(s): ${EF.washing_cycle} kg CO2e each.`;
-        confidence = 'medium';
-      }
-      if (t.includes('off') || t.includes('unplugged') || t.includes('saved')) {
-        carbonKg = -Math.abs(carbonKg);
-        note = 'Turning off / saving — converted to avoided emissions.';
-      }
-
-    } else if (isFood) {
-      detectedCategory = 'food';
-      const meals = extractNumber(t, [/(\d+)\s*meal/i, /(\d+)\s*order/i, /(\d+)\s*plate/i]) ?? 1;
-
-      if (isBeef) {
-        carbonKg = meals * EF.beef_meal;
-        note = `${meals} beef/red-meat meal(s): ${EF.beef_meal} kg CO2e each.`;
-        confidence = 'high';
-      } else if (isChicken) {
-        carbonKg = meals * EF.chicken_meal;
-        note = `${meals} chicken meal(s): ${EF.chicken_meal} kg CO2e each.`;
-        confidence = 'high';
-      } else if (isFish) {
-        carbonKg = meals * EF.fish_meal;
-        note = `${meals} fish meal(s): ${EF.fish_meal} kg CO2e each.`;
-        confidence = 'medium';
-      } else if (isVeg) {
-        carbonKg = -(meals * (EF.chicken_meal - EF.veg_meal)); // saving vs meat
-        note = `${meals} plant-based meal(s): saves ${(EF.chicken_meal - EF.veg_meal).toFixed(1)} kg CO2e vs chicken.`;
-        confidence = 'high';
-      } else if (isDelivery) {
-        carbonKg = meals * EF.delivery_order;
-        note = `${meals} food delivery order(s): ${EF.delivery_order} kg CO2e each (food + packaging + rider).`;
-        confidence = 'medium';
-      } else if (isFoodWaste) {
-        carbonKg = meals * EF.waste_meal;
-        note = `${meals} wasted meal(s): ${EF.waste_meal} kg CO2e each (upstream food emissions lost).`;
-        confidence = 'medium';
-      }
-
-    } else if (isShopping) {
-      detectedCategory = 'shopping';
-      const items = extractNumber(t, [/(\d+)\s*item/i, /(\d+)\s*piece/i, /(\d+)\s*pair/i]) ?? 1;
-      carbonKg = items * EF.clothing_item;
-      note = `${items} shopping item(s): ~${EF.clothing_item} kg CO2e each (clothing avg).`;
-      confidence = 'low';
-      assumptions.push('Carbon estimate is for typical clothing/goods. Electronics are higher.');
-
-    } else if (isCompost || isRecycle || isReuse) {
-      detectedCategory = 'waste';
-      if (isCompost) {
-        carbonKg = -0.5;
-        note = 'Composting avoids ~0.5 kg CO2e of methane emissions per session.';
-        confidence = 'medium';
-      } else if (isRecycle) {
-        carbonKg = -0.3;
-        note = 'Dry waste segregation enables recycling — estimated 0.3 kg CO2e avoided.';
-        confidence = 'medium';
-      } else {
-        carbonKg = -0.2;
-        note = 'Reusable item avoids single-use plastic. Estimated 0.2 kg CO2e saved.';
-        confidence = 'medium';
-      }
-
     } else {
-      // Soft fallback — at least signal direction
-      const isGood = /\b(saved|good|reduced|efficient|clean|green|avoided|better)\b/.test(t);
-      carbonKg = isGood ? -0.3 : 0.5;
-      note = isGood
-        ? 'Positive habit detected — estimated minor avoided emissions.'
-        : 'Activity logged — estimated minor emissions added. Add more detail for accuracy.';
+      // ── ZERO-IMPACT FALLBACK ────────────────────────────────────────────────
+      // Triggers if no keywords match, e.g., "what is nvidia", random gibberish
+      carbonKg = 0;
+      note = 'No recognizable lifestyle action found. Please mention a specific activity (e.g. "drove 5km", "ran AC for 3 hours", "ordered chicken").';
       confidence = 'low';
-      assumptions.push('Cannot parse specifics. Mention distance (km), hours, or item type for a real estimate.');
+      assumptions.push('Local engine fallback: Returned 0 impact to avoid false penalties on unrecognized text.');
     }
 
     // Round for display
