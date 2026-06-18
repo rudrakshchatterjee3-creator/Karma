@@ -1703,6 +1703,19 @@ function InsightsView({
                 </>
               )}
             </p>
+
+            {coachReport && top && (
+              <div className="mt-6 flex items-start gap-4 rounded-2xl border border-sage/20 bg-sage/5 p-4 sm:p-5">
+                <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sage/20 text-sage">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-sage">Recommended Action</h3>
+                  <p className="mt-1 text-xl font-medium text-white">{top.title}</p>
+                  <p className="mt-2 text-base text-white/70">{top.why}</p>
+                </div>
+              </div>
+            )}
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <MiniStat label="Analysis Confidence" value={coachReport && coachReport.sourceEngine === "nvidia_nim" ? "High" : "Medium"} />
               <MiniStat label="Effort required" value={top?.effort === "low" ? "Under 10 min" : "Plan once"} />
