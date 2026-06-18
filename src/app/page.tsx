@@ -1264,9 +1264,9 @@ function TodayView({
           
           <div className="flex-1 flex items-center justify-center relative py-10">
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-36 w-36 animate-pulse rounded-full bg-white/[0.03] blur-2xl" />
+              <div className="h-36 w-36 animate-pulse rounded-full bg-foreground opacity-5 blur-2xl" />
             </div>
-            <LeakIcon size={96} strokeWidth={0.7} className="text-white/10 relative z-10" />
+            <LeakIcon size={96} strokeWidth={0.7} className="text-foreground opacity-[0.15] relative z-10" />
           </div>
 
           <p className="mt-2 text-sm leading-6 text-white/60">
