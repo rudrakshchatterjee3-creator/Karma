@@ -102,7 +102,8 @@ input:focus-visible {
 
 .theme-light .panel,
 .theme-light .story-panel,
-.theme-light .hero-panel {
+.theme-light .hero-panel,
+.theme-light .share-card {
   border-color: rgba(15, 23, 42, 0.12);
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.62)),
