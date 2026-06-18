@@ -12,12 +12,10 @@ const googleId = "197228562186-kpnmh7pcm1lh81" + "vbtijc5ma0fp24i4to.apps.google
 const googleSecret = "GOCSPX-" + "PfKHqi--sxUm_Yqa26xu8wjnzbZ0";
 const fallbackSecret = "fallback_secret_karma_2026_super_secure_string_length_32_bytes_min";
 
-// Inject directly into process.env so NextAuth internal checks pass on Cloudflare
-if (!process.env.AUTH_GOOGLE_ID) process.env.AUTH_GOOGLE_ID = googleId;
-if (!process.env.AUTH_GOOGLE_SECRET) process.env.AUTH_GOOGLE_SECRET = googleSecret;
-if (!process.env.AUTH_SECRET) process.env.AUTH_SECRET = fallbackSecret;
-
-// Unconditionally overwrite AUTH_URL to fix routing loop, even if it's set in Cloudflare dashboard
+// Unconditionally override environment to protect NextAuth internals
+process.env.AUTH_GOOGLE_ID = googleId;
+process.env.AUTH_GOOGLE_SECRET = googleSecret;
+process.env.AUTH_SECRET = fallbackSecret;
 process.env.AUTH_URL = "https://karma-3jf.pages.dev";
 process.env.NEXTAUTH_URL = "https://karma-3jf.pages.dev";
 
@@ -27,13 +25,12 @@ import Google from "next-auth/providers/google";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      clientId: googleId,
+      clientSecret: googleSecret,
     }),
   ],
-  secret: process.env.AUTH_SECRET,
+  secret: fallbackSecret,
   trustHost: true,
-  basePath: "/api/auth",
   session: {
     strategy: "jwt",
   },
