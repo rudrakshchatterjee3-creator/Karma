@@ -761,11 +761,23 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
         </div>
         <div className="flex items-center gap-3">
           <button
-            className="secondary-button flex h-9 w-9 items-center justify-center p-0 border-sage/50 text-foreground"
+            className="secondary-button flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground hover:bg-white/10 transition-colors"
             onClick={toggleTheme}
             aria-label="Toggle theme"
           >
-            {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
+            {isLightMode ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2"/><path d="M12 20v2"/>
+                <path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>
+                <path d="M2 12h2"/><path d="M20 12h2"/>
+                <path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+              </svg>
+            )}
           </button>
           {session ? (
             <button className="primary-button" onClick={onStart}>
@@ -785,7 +797,33 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
         {/* Giant background orbs for density and glassmorphism */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-sage/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" />
         <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-sky-400/5 rounded-full blur-[100px] pointer-events-none -z-10" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-amber-400/5 rounded-full blur-[90px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '7s' }} />
         
+        {/* Decorative Floating Elements */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: [0, -15, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute hidden lg:flex top-1/4 right-[10%] flex-col gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md shadow-2xl -rotate-6"
+        >
+          <div className="h-2 w-12 rounded-full bg-sage/40" />
+          <div className="h-2 w-24 rounded-full bg-white/20" />
+          <div className="h-2 w-16 rounded-full bg-white/10" />
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: [0, 20, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute hidden lg:flex bottom-1/4 left-[10%] flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md shadow-2xl rotate-3"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-sky-400/20 flex items-center justify-center">
+              <div className="h-3 w-3 rounded-full bg-sky-400" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-2 w-20 rounded-full bg-white/30" />
+              <div className="h-2 w-12 rounded-full bg-white/10" />
+            </div>
+          </div>
+        </motion.div>
+
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
