@@ -888,36 +888,42 @@ function Header({ compact, profile, isLightMode, toggleTheme }: { compact: boole
 
 function LogoMark() {
   return (
-    <div className="logo-mark" aria-label="Karma logo">
-      <svg viewBox="0 0 48 48" role="img" className="h-8 w-8">
+    <div className="logo-mark hover:scale-105 transition-transform duration-300" aria-label="Karma logo">
+      <svg
+        viewBox="0 0 48 48"
+        role="img"
+        className="h-8 w-8 select-none transition-transform duration-1000 hover:rotate-180 ease-out"
+      >
         <defs>
-          <linearGradient id="karmaLogoGlow" x1="8" y1="6" x2="40" y2="42" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#F8FAFC" />
-            <stop offset="0.48" stopColor="#9CAF88" />
-            <stop offset="1" stopColor="#60A5FA" />
+          <linearGradient id="karmaLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#9CAF88" />
+            <stop offset="50%" stopColor="#60A5FA" />
+            <stop offset="100%" stopColor="#F6C85F" />
           </linearGradient>
+          <filter id="logoGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
         </defs>
+        {/* Outer subtle guide track representing structural alignment */}
+        <circle cx="24" cy="24" r="18" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1.5" />
+        
+        {/* The open feedback loop curve */}
         <path
-          d="M24 5.5C14.4 5.5 7 12.9 7 22.2c0 10.2 8.5 17.2 17 20.3 8.5-3.1 17-10.1 17-20.3C41 12.9 33.6 5.5 24 5.5Z"
-          fill="rgba(255,255,255,0.045)"
-          stroke="rgba(255,255,255,0.18)"
-        />
-        <path
-          d="M15.2 26.8c4.3-1.6 6.6-5.1 7.2-10.4 4.5 1.8 7.5 5.7 10.4 11.5"
+          d="M 36.72 11.28 A 18 18 0 1 0 36.72 36.72"
           fill="none"
-          stroke="url(#karmaLogoGlow)"
-          strokeLinecap="round"
+          stroke="url(#karmaLogoGradient)"
           strokeWidth="3.5"
-        />
-        <path
-          d="M14.9 31.8c4.2-1.1 7.1-1.2 10.3-.2 2.6.8 5 .5 7.9-1.4"
-          fill="none"
-          stroke="#F6C85F"
           strokeLinecap="round"
-          strokeWidth="2.6"
-          opacity="0.88"
         />
-        <circle cx="24" cy="16.4" r="2.4" fill="#F8FAFC" />
+        
+        {/* Connection anchor points */}
+        <circle cx="36.72" cy="11.28" r="1" fill="#9CAF88" opacity="0.4" />
+        <circle cx="36.72" cy="36.72" r="1" fill="#F6C85F" opacity="0.4" />
+
+        {/* Center glowing choice dot representing carbon-karma balance */}
+        <circle cx="24" cy="24" r="4" fill="rgba(248, 250, 252, 0.08)" />
+        <circle cx="24" cy="24" r="2" fill="var(--foreground)" filter="url(#logoGlow)" />
       </svg>
     </div>
   );
@@ -1455,7 +1461,7 @@ function TrackView({
             <h2 className="text-2xl font-semibold">Describe what happened</h2>
           </div>
           <div className="flex items-center gap-1.5 rounded-full border border-sky-300/25 bg-sky-300/8 px-3 py-1.5 text-xs text-sky-300">
-            <Sparkles size={12} />
+            <Sparkles size={12} className="animate-ai-sparkle" />
             AI estimates impact
           </div>
         </div>
@@ -1514,8 +1520,9 @@ function TrackView({
                 <Sparkles size={14} className="text-sage" />
                 <span className="text-xs font-medium uppercase tracking-[0.16em] text-white/50">Estimated impact</span>
                 {estimate.sourceEngine === "nvidia_nim" ? (
-                  <span className="rounded-full border border-[#76b900]/30 bg-[#76b900]/8 px-2 py-0.5 text-[10px] font-bold text-[#76b900] uppercase tracking-wide">
-                    NVIDIA NIM AI
+                  <span className="rounded-full border border-sky-400/25 bg-sky-400/8 px-2 py-0.5 text-[10px] font-bold text-sky-400 uppercase tracking-wide flex items-center gap-1">
+                    <Sparkles size={10} className="animate-ai-sparkle text-sky-400" />
+                    AI Estimated
                   </span>
                 ) : (
                   <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium text-white/45 uppercase tracking-wide">
@@ -1655,14 +1662,15 @@ function InsightsView({
         ) : (
           <>
             <div className="mb-5 flex items-center gap-3">
-              <div className="icon-tile"><Sparkles size={22} /></div>
+              <div className="icon-tile"><Sparkles size={22} className="animate-ai-sparkle" /></div>
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-white/45">Karma Coach</p>
                   {coachReport && (
                     coachReport.sourceEngine === "nvidia_nim" ? (
-                      <span className="rounded-full border border-[#76b900]/30 bg-[#76b900]/8 px-2 py-0.5 text-[9px] font-bold text-[#76b900] uppercase tracking-wider">
-                        NVIDIA NIM AI
+                      <span className="rounded-full border border-sky-400/25 bg-sky-400/8 px-2 py-0.5 text-[9px] font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1">
+                        <Sparkles size={10} className="animate-ai-sparkle text-sky-400" />
+                        AI Estimated
                       </span>
                     ) : (
                       <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-medium text-white/45 uppercase tracking-wider">

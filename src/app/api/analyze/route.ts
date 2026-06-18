@@ -126,6 +126,11 @@ Calculation Rules:
 4. IMPORTANT:
    - If the user is SAVING energy (e.g. "turned off AC", "unplugged laptop") or performing a green action (composting, recycling, reusable item, walking/cycling), the carbon value should be NEGATIVE (representing avoided emissions).
    - If the user is CONSUMING or emitting (e.g. driving a car, running AC, ordering delivery, buying clothes, food waste), the carbon value should be POSITIVE.
+   - If the user specifies a REDUCTION, SUBSTITUTION, or REPLACEMENT comparison (e.g. "used X instead of Y", "ate 200g of chicken instead of 300g", "took metro instead of auto", "ordered veg instead of chicken"), you MUST calculate the NET DELTA = (Actual Emissions - Baseline/Replaced Emissions).
+     If the actual emissions are LESS than what they would have emitted in the baseline, this net delta will be NEGATIVE.
+     For example: "ate 200g of chicken instead of 300g" -> Actual 200g chicken (approx 1.4 kg) minus Baseline 300g chicken (approx 2.1 kg) = -0.7 kg CO2e.
+     For example: "took metro instead of auto for 10km" -> Actual metro (0.25 kg) minus Baseline auto (0.96 kg) = -0.71 kg CO2e.
+     If actual emissions are less than baseline/replaced, the final "carbon" value MUST be NEGATIVE, and "points" must be POSITIVE.
 5. Karma points = Math.round(carbon * -100). (i.e. positive points for savings/negative carbon, negative points for emissions/positive carbon).
 6. Output a short 1-sentence note explaining the math.
 
