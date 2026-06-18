@@ -31,10 +31,6 @@ import {
   TrendingUp,
   Zap,
   ShieldCheck,
-  Eye,
-  EyeOff,
-  Play,
-  Loader2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -58,7 +54,6 @@ import {
   worldCo2TonnesPerYear,
   getCountryEmissions,
 } from "@/utils/karmaLogic";
-import { queryNvidiaNim } from "@/utils/localAi";
 
 type Tab = "today" | "track" | "insights" | "plan" | "recap" | "profile";
 
@@ -529,7 +524,6 @@ export default function KarmaApp() {
                   selectedCategory={selectedCategory}
                   setSelectedCategory={setSelectedCategory}
                   addLog={addLog}
-                  profile={state.profile}
                 />
               )}
               {tab === "insights" && <InsightsView profile={state.profile} logs={state.logs} actions={state.actions} />}
@@ -1253,12 +1247,10 @@ function TrackView({
   selectedCategory,
   setSelectedCategory,
   addLog,
-  profile,
 }: {
   selectedCategory: Category;
   setSelectedCategory: (category: Category) => void;
   addLog: (entry: Omit<LogEntry, "id" | "createdAt">) => void;
-  profile: Profile;
 }) {
   const [label, setLabel] = useState("");
   const [customNote, setCustomNote] = useState("");
@@ -1274,32 +1266,6 @@ function TrackView({
     }
     setEstimate({ status: "loading" });
     debounceRef.current = setTimeout(async () => {
-      // 1. Try NVIDIA NIM if enabled and has key
-      if (profile.localAiMode === "nvidia_nim" && profile.aiApiKey) {
-        try {
-          const data = await queryNvidiaNim(
-            profile.aiApiKey,
-            profile.aiModelName || "meta/llama-3.1-8b-instruct",
-            label
-          );
-          setEstimate({
-            status: "done",
-            ...data,
-            sourceEngine: "nvidia_nim",
-            isFallback: false,
-          });
-          // Auto-suggest category if detected differs from selected
-          if (data.category && data.category !== selectedCategory) {
-            setSelectedCategory(data.category as Category);
-          }
-          return;
-        } catch (err) {
-          console.error("NVIDIA NIM query failed, falling back to deterministic engine:", err);
-          // Fall through to deterministic engine
-        }
-      }
-
-      // 2. Deterministic Fallback Engine
       try {
         const res = await fetch("/api/analyze", {
           method: "POST",
@@ -1310,12 +1276,13 @@ function TrackView({
         const data = await res.json() as {
           carbon: number; points: number; note: string;
           confidence: "low" | "medium" | "high"; category: string;
+          sourceEngine?: string;
         };
         setEstimate({
           status: "done",
           ...data,
-          sourceEngine: "physics_engine",
-          isFallback: profile.localAiMode === "nvidia_nim", // Mark as fallback if NIM was requested but failed
+          sourceEngine: data.sourceEngine || "physics_engine",
+          isFallback: false,
         });
         // Auto-suggest category if detected differs from selected
         if (data.category && data.category !== selectedCategory) {
@@ -1454,14 +1421,13 @@ function TrackView({
               <div className="flex flex-wrap items-center gap-3 border-b border-white/8 px-4 py-3">
                 <Sparkles size={14} className="text-sage" />
                 <span className="text-xs font-medium uppercase tracking-[0.16em] text-white/50">Estimated impact</span>
-                {estimate.sourceEngine === "nvidia_nim" && (
+                {estimate.sourceEngine === "nvidia_nim" ? (
                   <span className="rounded-full border border-[#76b900]/30 bg-[#76b900]/8 px-2 py-0.5 text-[10px] font-bold text-[#76b900] uppercase tracking-wide">
-                    NVIDIA NIM
+                    NVIDIA NIM AI
                   </span>
-                )}
-                {estimate.isFallback && (
-                  <span className="rounded-full border border-amber-500/30 bg-amber-500/8 px-2 py-0.5 text-[10px] font-semibold text-amber-300 uppercase tracking-wide">
-                    Offline Fallback
+                ) : (
+                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium text-white/45 uppercase tracking-wide">
+                    Physics Engine
                   </span>
                 )}
                 <span className={`ml-auto rounded-full border px-2.5 py-0.5 text-xs font-medium ${confidenceColor[estimate.confidence]}`}>
@@ -1714,34 +1680,6 @@ function ProfileView({
 }) {
   const [draft, setDraft] = useState(profile);
   const [saved, setSaved] = useState(false);
-  const [showKey, setShowKey] = useState(false);
-  const [testingNim, setTestingNim] = useState(false);
-  const [testStatus, setTestStatus] = useState<{ success: boolean; message: string } | null>(null);
-
-  async function testNimConnection() {
-    if (!draft.aiApiKey) {
-      setTestStatus({ success: false, message: "Please enter an API Key first." });
-      return;
-    }
-    setTestingNim(true);
-    setTestStatus(null);
-    try {
-      const result = await queryNvidiaNim(
-        draft.aiApiKey,
-        draft.aiModelName || "meta/llama-3.1-8b-instruct",
-        "Rode petrol bike for 10 km"
-      );
-      if (typeof result.carbon === 'number' && typeof result.points === 'number') {
-        setTestStatus({ success: true, message: `Connection successful! Estimated carbon: ${result.carbon} kg CO2e (${result.points} pts)` });
-      } else {
-        setTestStatus({ success: false, message: "Connected, but response was invalid." });
-      }
-    } catch (err: any) {
-      setTestStatus({ success: false, message: err.message || "Failed to connect to NVIDIA NIM." });
-    } finally {
-      setTestingNim(false);
-    }
-  }
 
   const isDirty = JSON.stringify(draft) !== JSON.stringify(profile);
 
@@ -1807,75 +1745,6 @@ function ProfileView({
             <option value="light">Light</option>
           </select>
         </Field>
-
-        <div className="sm:col-span-2 border-t border-white/10 my-2 pt-4">
-          <h3 className="text-lg font-medium text-white mb-1">Estimation Engine</h3>
-          <p className="text-xs text-white/45">Choose whether to use the default physics engine or a cloud-based AI model to analyze manual entries.</p>
-        </div>
-
-        <Field label="Manual Log AI Engine">
-          <select 
-            className="input" 
-            value={draft.localAiMode || "none"} 
-            onChange={(e) => setDraft((current) => ({ ...current, localAiMode: e.target.value as Profile["localAiMode"] }))}
-          >
-            <option value="none">Default (Deterministic Physics Engine)</option>
-            <option value="nvidia_nim">NVIDIA NIM (Cloud AI)</option>
-          </select>
-        </Field>
-
-        {draft.localAiMode === "nvidia_nim" && (
-          <>
-            <Field label="NVIDIA NIM API Key">
-              <div className="relative flex items-center">
-                <input
-                  type={showKey ? "text" : "password"}
-                  className="input pr-10 w-full"
-                  value={draft.aiApiKey || ""}
-                  onChange={(e) => setDraft((current) => ({ ...current, aiApiKey: e.target.value }))}
-                  placeholder="nvapi-..."
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKey(!showKey)}
-                  className="absolute right-3 text-white/45 hover:text-white/75"
-                >
-                  {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </Field>
-            <Field label="NVIDIA NIM Model">
-              <input
-                className="input w-full"
-                value={draft.aiModelName || "meta/llama-3.1-8b-instruct"}
-                onChange={(e) => setDraft((current) => ({ ...current, aiModelName: e.target.value }))}
-                placeholder="e.g. meta/llama-3.1-8b-instruct"
-              />
-            </Field>
-            <div className="sm:col-span-2 flex flex-col gap-3 rounded-2xl border border-white/8 bg-white/[0.02] p-4 my-2">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium">Verify NVIDIA NIM Connection</p>
-                  <p className="text-xs text-white/45 mt-0.5 font-normal">Sends a brief test prompt to verify the API key and model.</p>
-                </div>
-                <button
-                  type="button"
-                  className="secondary-button whitespace-nowrap self-start sm:self-center"
-                  disabled={testingNim || !draft.aiApiKey}
-                  onClick={testNimConnection}
-                >
-                  {testingNim ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} />}
-                  {testingNim ? "Testing..." : "Test Connection"}
-                </button>
-              </div>
-              {testStatus && (
-                <p className={`text-xs mt-1 font-medium ${testStatus.success ? "text-sage" : "text-coral"}`}>
-                  {testStatus.message}
-                </p>
-              )}
-            </div>
-          </>
-        )}
 
         <div className="flex flex-col gap-3 sm:col-span-2 sm:flex-row pt-2">
           <button className="primary-button flex-1 justify-center disabled:cursor-not-allowed disabled:opacity-55" disabled={!isDirty} onClick={saveProfile}>

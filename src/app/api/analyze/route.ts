@@ -91,6 +91,71 @@ const SPEED_PATTERNS = [
   /at\s+(\d+(?:\.\d+)?)/i,
 ];
 
+const SYSTEM_PROMPT = `You are Karma Estimate AI, a precise carbon footprint analyzer for Indian lifestyles.
+Your task is to parse a user's description of a daily activity and estimate its carbon footprint and points.
+
+You MUST use these exact emission factors (EF) to calculate the carbon footprint (in kg CO2e):
+- Petrol Bike / Scooter: 0.089 kg CO2e/km (high-speed/aggressive: 0.115, E20 fuel: 0.072)
+- Petrol Car: 0.192 kg CO2e/km
+- Diesel Car: 0.171 kg CO2e/km
+- Cab / Taxi: 0.210 kg CO2e/km
+- Auto-rickshaw (CNG): 0.096 kg CO2e/km
+- Metro / Train: 0.025 kg CO2e/km
+- Bus: 0.055 kg CO2e/km
+- Flight: 0.255 kg CO2e/km (short-haul) or 0.195 kg CO2e/km (long-haul)
+- Air Conditioner (AC): 0.82 kg CO2e/hour per ton
+- Ceiling Fan: 0.034 kg CO2e/hour
+- Room Heater: 0.95 kg CO2e/hour
+- TV: 0.058 kg CO2e/hour
+- Laptop/PC: 0.022 kg CO2e/hour
+- Washing Machine: 0.45 kg CO2e/load
+- Vegetarian/Vegan meal: 0.8 kg CO2e
+- Chicken meal: 2.1 kg CO2e
+- Mutton/Beef/Red Meat meal: 6.5 kg CO2e
+- Food delivery order: 1.4 kg CO2e (packaging + delivery rider)
+- Food waste: 1.1 kg CO2e/meal
+- Shopping item (clothing average): 10.0 kg CO2e
+- Composting: -0.5 kg CO2e (avoided methane)
+- Recycling / Segregating waste: -0.3 kg CO2e
+- Reusable item (bottle, cup, bag): -0.2 kg CO2e
+
+Calculation Rules:
+1. Identify the activity category: "transport", "energy", "food", "shopping", or "waste".
+2. Extract quantities (distance in km, time in hours, count of items, etc.). If unspecified, use a reasonable default.
+3. Multiply the quantity by the emission factor.
+4. IMPORTANT:
+   - If the user is SAVING energy (e.g. "turned off AC", "unplugged laptop") or performing a green action (composting, recycling, reusable item, walking/cycling), the carbon value should be NEGATIVE (representing avoided emissions).
+   - If the user is CONSUMING or emitting (e.g. driving a car, running AC, ordering delivery, buying clothes, food waste), the carbon value should be POSITIVE.
+5. Karma points = Math.round(carbon * -100). (i.e. positive points for savings/negative carbon, negative points for emissions/positive carbon).
+6. Output a short 1-sentence note explaining the math.
+
+You must return valid JSON matching this schema exactly, with NO other text:
+{
+  "carbon": number,
+  "points": number,
+  "category": "transport" | "energy" | "food" | "shopping" | "waste",
+  "note": "string",
+  "confidence": "high" | "medium" | "low",
+  "assumptions": ["string"]
+}
+`;
+
+function parseJSONBlock(text: string) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[0]);
+      } catch (e) {
+        console.error("Failed to parse matched JSON block:", e);
+      }
+    }
+    throw new Error("Could not parse JSON from model response: " + text);
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -98,6 +163,59 @@ export async function POST(request: Request) {
 
     if (!actionText || typeof actionText !== 'string') {
       return NextResponse.json({ error: 'actionText is required' }, { status: 400 });
+    }
+
+    // 1. Try server-side NVIDIA NIM query if key exists
+    const apiKey = process.env.NVIDIA_API_KEY;
+    if (apiKey) {
+      try {
+        const nimRes = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "meta/llama-3.1-8b-instruct",
+            messages: [
+              { role: "system", content: SYSTEM_PROMPT },
+              { role: "user", content: actionText },
+            ],
+            temperature: 0.1,
+            max_tokens: 400,
+          }),
+        });
+
+        if (nimRes.ok) {
+          const data = await nimRes.json();
+          const content = data.choices?.[0]?.message?.content;
+          if (content) {
+            const parsed = parseJSONBlock(content);
+            const carbonRounded = parseFloat(parsed.carbon.toFixed(2));
+            const points = toPoints(carbonRounded);
+
+            return NextResponse.json({
+              carbon: carbonRounded,
+              points,
+              category: parsed.category,
+              note: parsed.note,
+              confidence: parsed.confidence,
+              assumptions: parsed.assumptions,
+              // Legacy fields
+              type: carbonRounded < 0 ? 'lightness' : 'friction',
+              frictionDelta: parseFloat((carbonRounded / 10).toFixed(3)),
+              moneyDelta: Math.round(Math.abs(points) * 1.2),
+              summary: parsed.note,
+              sourceEngine: "nvidia_nim"
+            });
+          }
+        } else {
+          const errText = await nimRes.text();
+          console.error(`NVIDIA NIM responded with error status ${nimRes.status}: ${errText}`);
+        }
+      } catch (err) {
+        console.error("Backend NVIDIA NIM query failed, falling back to deterministic parser:", err);
+      }
     }
 
     const t = actionText.toLowerCase();
@@ -324,6 +442,7 @@ export async function POST(request: Request) {
       frictionDelta: parseFloat((carbonRounded / 10).toFixed(3)),
       moneyDelta: Math.round(Math.abs(points) * 1.2),
       summary: note,
+      sourceEngine: "physics_engine",
     });
 
   } catch (err) {

@@ -15,9 +15,6 @@ export type Profile = {
   diet: Diet;
   deliveries: number;
   motivation: Motivation;
-  localAiMode?: "none" | "nvidia_nim";
-  aiApiKey?: string;
-  aiModelName?: string;
 };
 
 export type LogEntry = {
@@ -68,9 +65,6 @@ export const defaultProfile: Profile = {
   diet: "mixed",
   deliveries: 4,
   motivation: "climate",
-  localAiMode: "none",
-  aiApiKey: "",
-  aiModelName: "meta/llama-3.1-8b-instruct",
 };
 
 // ─────────────────────────────────────────────────────────────
