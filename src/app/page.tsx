@@ -165,21 +165,23 @@ function getInitialState(): AppState {
 }
 
 export default function KarmaApp() {
+  const { data: session, status } = useSession();
   const [state, setState] = useState<AppState>(getInitialState);
   const [tab, setTab] = useState<Tab>("today");
   const [storyStep, setStoryStep] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<Category>("energy");
   const [hydrated, setHydrated] = useState(false);
+  const [cloudSynced, setCloudSynced] = useState(false);
   const [isLightMode, setIsLightMode] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
 
+  // 1. Initial Local Hydration
   useEffect(() => {
     const stored = window.localStorage.getItem(storageKey);
     queueMicrotask(() => {
       if (stored) {
         try {
           const parsed = JSON.parse(stored) as AppState;
-          // Migrate old state that may not have showLanding
           setState({ ...getInitialState(), ...parsed, showLanding: false });
           setIsLightMode(parsed.profile?.themePreference === "light");
           setShowSetup(false);
@@ -191,11 +193,47 @@ export default function KarmaApp() {
     });
   }, []);
 
+  // 2. Cloud Hydration
+  useEffect(() => {
+    if (!hydrated || status === "loading" || cloudSynced) return;
+    
+    if (session?.user) {
+      // Fetch from Cloud KV
+      fetch("/api/sync")
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.profile) {
+            // Found cloud data, override local
+            setState({ ...getInitialState(), ...data, showLanding: false });
+            setIsLightMode(data.profile.themePreference === "light");
+            setShowSetup(false);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setCloudSynced(true));
+    } else if (status === "unauthenticated") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCloudSynced(true);
+    }
+  }, [session, hydrated, status, cloudSynced]);
+
+  // 3. Save to Local & Cloud
   useEffect(() => {
     if (hydrated) {
+      // Local Save
       window.localStorage.setItem(storageKey, JSON.stringify(state));
+      
+      // Cloud Save (debounced simply by react effect batching, but we can do it directly for now since state changes are relatively rare)
+      if (session?.user && cloudSynced && state.onboarded) {
+        // We only save to cloud if we've successfully pulled the latest (cloudSynced) and user is logged in
+        fetch("/api/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(state),
+        }).catch(console.error);
+      }
     }
-  }, [hydrated, state]);
+  }, [hydrated, state, session, cloudSynced]);
 
   const [coachReport, setCoachReport] = useState<{
     headline: string;
@@ -221,22 +259,23 @@ export default function KarmaApp() {
         const data = await res.json() as {
           headline: string;
           summary: string;
-          actions: any[];
+          actions: Record<string, unknown>[];
           sourceEngine: "nvidia_nim" | "physics_engine";
         };
         if (!active) return;
         
-        const actionsMapped: Action[] = data.actions.map((action: any, index: number) => {
+        const actionsMapped: Action[] = data.actions.map((rawAction, index) => {
+          const action = rawAction as unknown as Action;
           const previous = state.actions.find((item) => item.id === action.id);
           return {
-            id: action.id as string,
-            category: action.category as any,
-            title: action.title as string,
-            why: action.why as string,
-            step: action.step as string,
-            effort: action.effort as any,
-            carbon: action.carbon as number,
-            points: action.points as number,
+            id: action.id,
+            category: action.category,
+            title: action.title,
+            why: action.why,
+            step: action.step,
+            effort: action.effort,
+            carbon: action.carbon,
+            points: action.points,
             status: previous?.status ?? (index === 0 ? "active" : "suggested"),
             score: 100,
           };
