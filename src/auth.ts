@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET || "fallback_secret_karma_2026_super_secure_string",
   trustHost: true,
   session: {
     strategy: "jwt",
