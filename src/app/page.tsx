@@ -461,7 +461,7 @@ export default function KarmaApp() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.3 }}
-                  className="text-center sm:text-left"
+                  className="text-center sm:text-left min-w-0"
                 >
                   <p className="mb-2 text-sm font-medium uppercase tracking-[0.22em] text-sage">{story.eyebrow}</p>
                   <h1 className="text-3xl font-semibold leading-tight tracking-normal sm:text-4xl">{story.title}</h1>
@@ -509,10 +509,10 @@ export default function KarmaApp() {
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e12] via-[#0a0e12]/40 to-transparent" />
                       
                       <div className="absolute inset-x-6 bottom-6 flex items-end justify-between theme-dark-panel">
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-sm font-medium uppercase tracking-[0.16em] text-white/50 drop-shadow-md">Story {storyStep + 1} of {storyCards.length}</p>
-                          <h2 className="mt-1 text-3xl font-semibold text-white drop-shadow-md">{story.metric}</h2>
-                          <p className="mt-1 text-sm text-white/70 drop-shadow-md">{story.metricLabel}</p>
+                          <h2 className="mt-1 text-3xl font-semibold text-white drop-shadow-md truncate">{story.metric}</h2>
+                          <p className="mt-1 text-sm text-white/70 drop-shadow-md truncate">{story.metricLabel}</p>
                         </div>
                         <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-white/20 bg-black/40 text-white backdrop-blur-md">
                           <StoryIcon className={story.accent} size={24} />
@@ -520,7 +520,7 @@ export default function KarmaApp() {
                       </div>
                     </div>
 
-                    <div className="p-6 sm:p-8">
+                    <div className="p-6 sm:p-8 min-w-0">
                       <p className="text-lg leading-relaxed opacity-90">{story.insight}</p>
                     </div>
                   </motion.div>
@@ -1373,12 +1373,12 @@ function TodayView({
         </section>
 
         <section className="panel flex flex-col justify-between p-5 min-h-[350px]">
-          <div className="flex items-start justify-between">
-            <div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
               <p className="text-sm text-white/45">This week&apos;s leak</p>
-              <h2 className="mt-2 text-3xl font-semibold">{categoryMeta[biggestLeak?.[0] ?? "energy"].label}</h2>
+              <h2 className="mt-2 text-3xl font-semibold break-words">{categoryMeta[biggestLeak?.[0] ?? "energy"].label}</h2>
             </div>
-            <div className="icon-tile"><LeakIcon size={22} /></div>
+            <div className="icon-tile shrink-0"><LeakIcon size={22} /></div>
           </div>
           
           <div className="flex-1 flex items-center justify-center relative py-10">
@@ -1416,12 +1416,12 @@ function TodayView({
 
       <div className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
         <section className="panel p-5">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div className="min-w-0">
               <p className="text-sm text-white/45">Active action</p>
-              <h2 className="text-2xl font-semibold">{activeAction?.title ?? "No active action yet"}</h2>
+              <h2 className="text-2xl font-semibold break-words">{activeAction?.title ?? "No active action yet"}</h2>
             </div>
-            <Target className="text-sage" />
+            <Target className="text-sage shrink-0 mt-1" />
           </div>
           {activeAction ? (
             <>
@@ -1437,12 +1437,12 @@ function TodayView({
         </section>
 
         <section className="panel p-5">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div className="min-w-0">
               <p className="text-sm text-white/45">Recent logs</p>
-              <h2 className="text-2xl font-semibold">What changed the week</h2>
+              <h2 className="text-2xl font-semibold break-words">What changed the week</h2>
             </div>
-            <Clock3 className="text-white/50" />
+            <Clock3 className="text-white/50 shrink-0 mt-1" />
           </div>
           {logs.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-8 text-center text-sm text-white/38">
@@ -2222,11 +2222,11 @@ function ContributionPanel({ avoidedCarbon, earnedPoints }: { avoidedCarbon: num
   return (
     <section className="panel p-5">
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm text-white/45">Your contribution</p>
-          <h2 className="mt-2 font-outfit text-3xl font-medium tracking-tight">{carbon(avoidedCarbon)} avoided</h2>
+          <h2 className="mt-2 font-outfit text-3xl font-medium tracking-tight break-words">{carbon(avoidedCarbon)} avoided</h2>
         </div>
-        <div className="icon-tile"><Sparkles size={22} /></div>
+        <div className="icon-tile shrink-0"><Sparkles size={22} /></div>
       </div>
       <p className="mt-5 text-sm leading-6 text-white/64">
         This is your visible contribution to cleaner shared air. Equivalent to {treesGrown.toFixed(1)} trees growing for a year, or reducing health risks for {Math.max(1, Math.round(healthRiskReduced))} people in high-density areas.
