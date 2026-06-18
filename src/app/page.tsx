@@ -769,7 +769,7 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
           <LogoMark />
           <span className="text-lg font-semibold tracking-normal text-foreground">Karma</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mr-12 sm:mr-16">
           {session ? (
             <button className="primary-button" onClick={onStart}>
               Dashboard <ArrowRight size={16} />
