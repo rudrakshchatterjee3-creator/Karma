@@ -16,7 +16,7 @@ import {
   MapPin,
   Leaf,
   Plus,
-  RotateCcw,
+  Trash2,
   Save,
   Settings2,
   Share2,
@@ -146,7 +146,7 @@ const categoryMeta: Record<Category, { label: string; icon: LucideIcon; accent: 
   energy: { label: "Energy", icon: Bolt, accent: "text-amber-300" },
   food: { label: "Food", icon: Utensils, accent: "text-coral" },
   shopping: { label: "Shopping", icon: WalletCards, accent: "text-violet-300" },
-  waste: { label: "Waste", icon: RotateCcw, accent: "text-sage" },
+  waste: { label: "Waste", icon: Trash2, accent: "text-sage" },
 };
 
 function getInitialState(): AppState {
