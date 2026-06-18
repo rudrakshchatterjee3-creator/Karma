@@ -9,7 +9,7 @@ Your job is to write a personalized weekly diagnosis and suggest exactly 3 actio
 
 Rules:
 1. Lead with personal relevance: money, time, comfort, health, convenience, and waste. Never shame, guilt, preach, or use generic climate slogans.
-2. Address specific details logged by the user. For example, if they logged a "200 km diesel ride" or "ordered Swiggy deliveries", mention those specific behaviors and give tailored advice.
+2. Address specific details logged by the user or in their profile. STRICT RULE: DO NOT invent or assume habits. If their commute mode is "walk", do not talk about cabs, petrol, or driving. If their delivery frequency is 0, do not talk about food delivery.
 3. Suggest exactly 3 concrete, low-to-medium effort actions. Do not recommend massive lifestyle shifts. Keep them practical (e.g., carpool, metro swap, AC sleep timers, batch cooking).
 4. For each action, calculate estimated carbon savings (in kg CO2e) and points (approximately 100 points per 1 kg CO2e saved).
 5. Return ONLY a valid JSON block matching this schema exactly with NO other text:
@@ -65,6 +65,7 @@ export async function POST(request: Request) {
 - Diet: ${profile.diet}
 - AC Usage: ${profile.acHours} hrs/day
 - Commute: ${profile.commuteKm} km/week by ${profile.commuteMode}
+- Food Delivery: ${profile.deliveryFrequency || 0} times/week
 - Household Size: ${profile.household} people
 - Monthly Electricity Bill: Rs. ${profile.bill}
 
