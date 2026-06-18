@@ -592,12 +592,13 @@ export default function KarmaApp() {
 
   // ── MAIN APP ───────────────────────────────────────────────
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="min-h-screen bg-background text-foreground relative">
       <div className={`app-shell ${isLightMode ? "theme-light" : ""}`}>
-      <div className="mx-auto grid min-h-screen w-full max-w-7xl grid-rows-[auto_1fr_auto] px-4 py-5 sm:px-6 lg:grid-cols-[230px_1fr] lg:grid-rows-[auto_1fr] lg:gap-6 lg:px-8">
+      <ThemeToggle isLightMode={isLightMode} toggleTheme={toggleTheme} />
+      <div className="mx-auto grid min-h-screen w-full max-w-7xl grid-rows-[auto_1fr_auto] px-4 py-5 sm:px-6 lg:grid-cols-[230px_1fr] lg:grid-rows-[auto_1fr] lg:gap-6 lg:px-8 relative">
         <aside className="hidden lg:block">
           <div className="sticky top-5 space-y-5">
-            <Header compact={false} profile={state.profile} isLightMode={isLightMode} toggleTheme={toggleTheme} />
+            <Header compact={false} profile={state.profile} />
             <nav className="panel p-2">
               {tabs.map((item) => {
                 const Icon = item.icon;
@@ -620,7 +621,7 @@ export default function KarmaApp() {
         </aside>
 
         <div className="lg:hidden">
-          <Header compact profile={state.profile} isLightMode={isLightMode} toggleTheme={toggleTheme} />
+          <Header compact profile={state.profile} />
         </div>
 
         <section className="min-w-0 pb-28 lg:pb-8">
@@ -962,34 +963,35 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
 }
 
 // ─────────────────────────────────────────────────────────────
-function Header({ compact, profile, isLightMode, toggleTheme }: { compact: boolean; profile: Profile; isLightMode: boolean; toggleTheme: () => void }) {
+function Header({ compact, profile }: { compact: boolean; profile: Profile }) {
   const { data: session } = useSession();
   const displayName = session?.user?.name ? `${session.user.name}'s tracker` : (profile.name ? `${profile.name}'s tracker` : "Carbon emissions tracker");
   
   return (
-    <div className={`flex items-center justify-between ${compact ? "py-2" : ""}`}>
-      <div className="flex items-center gap-3">
-        <LogoMark />
-        <div>
-          <p className="text-lg font-semibold tracking-normal text-foreground">Karma</p>
-          <p className="text-xs text-[var(--foreground)]/45 truncate max-w-[140px] sm:max-w-xs">{displayName}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <button
-          className="secondary-button flex h-9 w-9 items-center justify-center p-0 border-sage/50 transition-transform active:scale-95 text-foreground"
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-        >
-          <div className={`transition-all duration-500 ${isLightMode ? "rotate-[360deg] opacity-100" : "-rotate-90 opacity-0 absolute"}`}>
-            <Sun size={18} />
-          </div>
-          <div className={`transition-all duration-500 ${!isLightMode ? "rotate-0 opacity-100" : "rotate-90 opacity-0 absolute"}`}>
-            <Moon size={18} />
-          </div>
-        </button>
+    <div className={`flex items-center gap-3 ${compact ? "py-2" : ""}`}>
+      <LogoMark />
+      <div>
+        <p className="text-lg font-semibold tracking-normal text-foreground">Karma</p>
+        <p className="text-xs text-[var(--foreground)]/45 truncate max-w-[140px] sm:max-w-xs">{displayName}</p>
       </div>
     </div>
+  );
+}
+
+function ThemeToggle({ isLightMode, toggleTheme }: { isLightMode: boolean; toggleTheme: () => void }) {
+  return (
+    <button
+      className="secondary-button absolute top-5 right-4 sm:top-5 sm:right-6 lg:top-5 lg:right-8 z-50 flex h-10 w-10 items-center justify-center rounded-full p-0 border-sage/50 transition-transform active:scale-95 text-foreground shadow-lg backdrop-blur-md"
+      onClick={toggleTheme}
+      aria-label="Toggle theme"
+    >
+      <div className={`transition-all duration-500 ${isLightMode ? "rotate-[360deg] opacity-100" : "-rotate-90 opacity-0 absolute"}`}>
+        <Sun size={18} />
+      </div>
+      <div className={`transition-all duration-500 ${!isLightMode ? "rotate-0 opacity-100" : "rotate-90 opacity-0 absolute"}`}>
+        <Moon size={18} />
+      </div>
+    </button>
   );
 }
 
