@@ -1108,19 +1108,20 @@ function SetupOverlay({
 
   return (
     <motion.div
-      className="fixed inset-0 z-[80] grid place-items-center bg-[#05070a]/72 px-4 py-6 backdrop-blur-2xl"
+      className="fixed inset-0 z-[80] overflow-y-auto overflow-x-hidden bg-[#05070a]/72 backdrop-blur-2xl"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <div className="w-full max-w-md">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, y: 10, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#0a0e14] shadow-2xl theme-dark-panel"
-        >
+      <div className="flex min-h-full w-full items-center justify-center p-4 py-8 sm:py-12">
+        <div className="w-full max-w-md">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#0a0e14] shadow-2xl theme-dark-panel"
+          >
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent" />
           
           <div className="relative p-6 sm:p-8">
@@ -1256,6 +1257,7 @@ function SetupOverlay({
             </div>
           </div>
         </motion.div>
+      </div>
       </div>
     </motion.div>
   );
