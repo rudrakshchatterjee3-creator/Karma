@@ -1,18 +1,18 @@
 export type Category = "transport" | "energy" | "food" | "shopping" | "waste";
 export type Motivation = "save" | "comfort" | "health" | "organize" | "climate";
+export type Diet = "veg" | "mixed" | "high-meat";
 
 export type Profile = {
   name: string;
   country: string;
   city: string;
-  timezone: string;
   themePreference: "dark" | "light";
   household: number;
   bill: number;
   acHours: number;
   commuteMode: "bike" | "car" | "metro" | "auto" | "cab" | "walk";
   commuteKm: number;
-  diet: "veg" | "mixed" | "high-meat";
+  diet: Diet;
   deliveries: number;
   motivation: Motivation;
 };
@@ -54,12 +54,11 @@ export type StoryCard = {
 
 export const defaultProfile: Profile = {
   name: "",
-  country: "",
+  country: "India",
   city: "",
-  timezone: "UTC",
   themePreference: "dark",
   household: 3,
-  bill: 1500, // Fixed out-of-bounds bug
+  bill: 1500,
   acHours: 5,
   commuteMode: "car",
   commuteKm: 50,
@@ -68,7 +67,68 @@ export const defaultProfile: Profile = {
   motivation: "climate",
 };
 
-export const worldCo2TonnesPerYear = 41_600_000_000;
+// ─────────────────────────────────────────────────────────────
+// REAL COUNTRY CO2 DATA (IEA / Global Carbon Budget 2024)
+// Annual CO2 emissions in million tonnes (MtCO2/year)
+// These are fossil fuel + industry emissions from 2023 estimates.
+// ─────────────────────────────────────────────────────────────
+export const countryEmissionsData: Record<string, { annual: number; label: string }> = {
+  "china":          { annual: 12_500,  label: "China" },
+  "united states":  { annual: 4_900,   label: "United States" },
+  "usa":            { annual: 4_900,   label: "United States" },
+  "us":             { annual: 4_900,   label: "United States" },
+  "india":          { annual: 2_800,   label: "India" },
+  "russia":         { annual: 1_900,   label: "Russia" },
+  "japan":          { annual: 1_050,   label: "Japan" },
+  "germany":        { annual: 640,     label: "Germany" },
+  "south korea":    { annual: 610,     label: "South Korea" },
+  "korea":          { annual: 610,     label: "South Korea" },
+  "iran":           { annual: 750,     label: "Iran" },
+  "canada":         { annual: 570,     label: "Canada" },
+  "saudi arabia":   { annual: 680,     label: "Saudi Arabia" },
+  "brazil":         { annual: 490,     label: "Brazil" },
+  "indonesia":      { annual: 690,     label: "Indonesia" },
+  "mexico":         { annual: 440,     label: "Mexico" },
+  "south africa":   { annual: 470,     label: "South Africa" },
+  "australia":      { annual: 390,     label: "Australia" },
+  "turkey":         { annual: 440,     label: "Turkey" },
+  "united kingdom": { annual: 330,     label: "United Kingdom" },
+  "uk":             { annual: 330,     label: "United Kingdom" },
+  "france":         { annual: 290,     label: "France" },
+  "italy":          { annual: 290,     label: "Italy" },
+  "poland":         { annual: 310,     label: "Poland" },
+  "thailand":       { annual: 290,     label: "Thailand" },
+  "ukraine":        { annual: 200,     label: "Ukraine" },
+  "spain":          { annual: 230,     label: "Spain" },
+  "egypt":          { annual: 260,     label: "Egypt" },
+  "pakistan":       { annual: 210,     label: "Pakistan" },
+  "vietnam":        { annual: 280,     label: "Vietnam" },
+  "malaysia":       { annual: 250,     label: "Malaysia" },
+  "argentina":      { annual: 200,     label: "Argentina" },
+  "netherlands":    { annual: 145,     label: "Netherlands" },
+  "bangladesh":     { annual: 120,     label: "Bangladesh" },
+  "philippines":    { annual: 140,     label: "Philippines" },
+  "uae":            { annual: 190,     label: "UAE" },
+  "nigeria":        { annual: 120,     label: "Nigeria" },
+  "colombia":       { annual: 95,      label: "Colombia" },
+  "singapore":      { annual: 50,      label: "Singapore" },
+  "new zealand":    { annual: 34,      label: "New Zealand" },
+  "sweden":         { annual: 40,      label: "Sweden" },
+  "norway":         { annual: 42,      label: "Norway" },
+  "switzerland":    { annual: 35,      label: "Switzerland" },
+};
+
+export const worldCo2TonnesPerYear = 41_600_000_000; // 41.6 Gt CO2 — Global Carbon Budget 2024
+
+/**
+ * Returns annual CO2 emissions in tonnes/year for a given country string.
+ * Falls back to null if not found.
+ */
+export function getCountryEmissions(country: string): { annual: number; label: string } | null {
+  if (!country?.trim()) return null;
+  const key = country.trim().toLowerCase();
+  return countryEmissionsData[key] ?? null;
+}
 
 export function totalsByCategory(logs: LogEntry[], key: "carbon" | "points") {
   return logs.reduce(
@@ -95,9 +155,17 @@ export function carbon(value: number) {
   return `${sign}${Math.abs(value).toFixed(1)} kg CO2e`;
 }
 
+// Diet multiplier for food-related calculations
+function dietMultiplier(diet: Diet): number {
+  if (diet === "veg") return 0.65;
+  if (diet === "high-meat") return 1.45;
+  return 1.0; // mixed
+}
+
 export function calculateMonthlyLeak(profile: Profile): number {
-  const electricityLeak = profile.bill * 0.15 + (profile.acHours * 120);
-  const deliveryLeak = profile.deliveries * 4 * 45;
+  const bill = Math.max(800, Math.min(8000, profile.bill)); // clamped
+  const electricityLeak = bill * 0.15 + profile.acHours * 120;
+  const deliveryLeak = profile.deliveries * 4 * 45 * dietMultiplier(profile.diet);
   let transportLeak = 0;
   if (profile.commuteMode === "cab") {
     transportLeak = 1200;
@@ -110,18 +178,22 @@ export function calculateMonthlyLeak(profile: Profile): number {
   } else {
     transportLeak = 0;
   }
-  return Math.round(electricityLeak + deliveryLeak + transportLeak);
+  // Household scale — shared costs are divided but individual impact remains
+  const householdFactor = 0.7 + (Math.min(8, Math.max(1, profile.household)) - 1) * 0.06;
+  return Math.round((electricityLeak + deliveryLeak + transportLeak) * householdFactor);
 }
 
 export function getStoryCards(profile: Profile): StoryCard[] {
   const acWaste = Math.max(1, Math.round(profile.acHours * 1.9));
   const commuteCarbon = Math.max(2, Math.round(profile.commuteKm * (profile.commuteMode === "metro" ? 0.04 : profile.commuteMode === "walk" ? 0.01 : 0.12)));
-  const deliveryCarbon = Math.max(1, Math.round(profile.deliveries * 0.8));
+  const deliveryCarbon = Math.max(1, Math.round(profile.deliveries * 0.8 * dietMultiplier(profile.diet)));
   const monthlyLeak = calculateMonthlyLeak(profile);
+
+  const cityLabel = profile.city ? `A week in ${profile.city}` : "A normal week";
 
   return [
     {
-      eyebrow: profile.city ? `A week in ${profile.city}` : "A normal week",
+      eyebrow: cityLabel,
       title: "Your lifestyle leaves an invisible trail.",
       image: "/images/story_intro.png",
       metric: `${acWaste + commuteCarbon + deliveryCarbon} kg`,
@@ -164,7 +236,7 @@ export function getStoryCards(profile: Profile): StoryCard[] {
       eyebrow: "Take control",
       title: "You can't fix what you can't see.",
       image: "/images/story_future.png",
-      metric: `₹${monthlyLeak.toLocaleString("en-IN")}`, // Rupee formatted
+      metric: `₹${monthlyLeak.toLocaleString("en-IN")}`,
       metricLabel: "monthly lifestyle leak",
       insight: "Karma finds the hidden waste in your routine and gives you simple ways to plug the leaks.",
       iconName: "Sparkles",
@@ -190,7 +262,6 @@ export function createActions(profile: Profile, logs: LogEntry[]): Action[] {
 
   const motivationBoost = (category: Category) => {
     if (profile.motivation === "save") {
-      // Prioritize categories where user is leaking (negative points)
       return categoryPoints[category] < 0 ? 18 : 5;
     }
     if (profile.motivation === "comfort") return category === "energy" ? 20 : 6;
@@ -201,21 +272,21 @@ export function createActions(profile: Profile, logs: LogEntry[]): Action[] {
 
   const candidates: Omit<Action, "score" | "status">[] = [];
 
-  // 1. Run AC efficiently: only if acHours > 0
+  // 1. AC efficiency: only if acHours > 0
   if (profile.acHours > 0) {
     candidates.push({
       id: "ac-24-fan",
       category: "energy",
-      title: "Run AC at 24 C with fan support",
+      title: "Run AC at 24°C with fan support",
       why: "Cooling is your most expensive comfort habit. This keeps the room comfortable without forcing the compressor to work as hard.",
-      step: "Tonight, set AC to 24 C and fan to medium for the first 45 minutes.",
+      step: "Tonight, set AC to 24°C and fan to medium for the first 45 minutes.",
       effort: "low",
       carbon: 2.0 + profile.acHours * 1.1,
       points: 200 + profile.acHours * 110,
     });
   }
 
-  // 2. Transport swap: only if commuteKm > 0 and mode is motorized leak
+  // 2. Transport swap: only if motorized commute
   if (profile.commuteKm > 0 && profile.commuteMode !== "walk" && profile.commuteMode !== "bike") {
     candidates.push({
       id: "commute-swap",
@@ -231,14 +302,17 @@ export function createActions(profile: Profile, logs: LogEntry[]): Action[] {
 
   // 3. Food deliveries: only if deliveries > 0
   if (profile.deliveries > 0) {
+    const foodTitle = profile.diet === "high-meat"
+      ? "Replace two meat-heavy deliveries with a home-cooked meal"
+      : "Replace two delivery dinners with one planned meal batch";
     candidates.push({
       id: "delivery-bundle",
       category: "food",
-      title: "Replace two delivery dinners with one planned meal batch",
+      title: foodTitle,
       why: "Delivery is convenient, but the repeated packaging, fees, and add-ons create a silent monthly leak.",
       step: "Choose one simple dinner you can repeat twice this week.",
       effort: "medium",
-      carbon: profile.deliveries * 0.7,
+      carbon: profile.deliveries * 0.7 * dietMultiplier(profile.diet),
       points: profile.deliveries * 70,
     });
   }

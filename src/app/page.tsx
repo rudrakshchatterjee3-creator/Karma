@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -28,6 +28,9 @@ import {
   UserRound,
   WalletCards,
   Wind,
+  TrendingUp,
+  Zap,
+  ShieldCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -36,6 +39,7 @@ import {
   type Profile,
   type Category,
   type Motivation,
+  type Diet,
   type LogEntry,
   type Action,
   type StoryCard,
@@ -48,6 +52,7 @@ import {
   formatRupees,
   carbon,
   worldCo2TonnesPerYear,
+  getCountryEmissions,
 } from "@/utils/karmaLogic";
 
 type Tab = "today" | "track" | "insights" | "plan" | "recap" | "profile";
@@ -61,18 +66,19 @@ type ManualLogDraft = {
 
 type AppState = {
   onboarded: boolean;
+  showLanding: boolean;
   profile: Profile;
   logs: LogEntry[];
   actions: Action[];
 };
 
-const storageKey = "karma-product-state-v1";
+const storageKey = "karma-product-state-v2";
 
 const initialLogs: LogEntry[] = [
   {
     id: "initial-1",
     category: "energy",
-    label: "AC ran overnight, 24 C",
+    label: "AC ran overnight, 24°C",
     carbon: 3.2,
     points: -320,
     note: "Cooling represents the largest slice of an urban Indian energy bill.",
@@ -106,7 +112,7 @@ const quickLogs: Record<Category, Omit<LogEntry, "id" | "createdAt">[]> = {
   ],
   energy: [
     { category: "energy", label: "Already running AC efficiently", carbon: -3.5, points: 350, note: "Efficient baseline habits mean you're already preventing significant waste." },
-    { category: "energy", label: "AC at 24 C with fan", carbon: -1.9, points: 190, note: "Same comfort range, lower compressor load." },
+    { category: "energy", label: "AC at 24°C with fan", carbon: -1.9, points: 190, note: "Same comfort range, lower compressor load." },
     { category: "energy", label: "AC ran extra 2 hours", carbon: 3.8, points: -380, note: "Cooling is useful. Extra hours are where the bill leaks." },
   ],
   food: [
@@ -146,6 +152,7 @@ const categoryMeta: Record<Category, { label: string; icon: LucideIcon; accent: 
 function getInitialState(): AppState {
   return {
     onboarded: false,
+    showLanding: true,
     profile: defaultProfile,
     logs: initialLogs,
     actions: createActions(defaultProfile, initialLogs).map((action, index) => ({
@@ -170,8 +177,9 @@ export default function KarmaApp() {
       if (stored) {
         try {
           const parsed = JSON.parse(stored) as AppState;
-          setState(parsed);
-          setIsLightMode(parsed.profile.themePreference === "light");
+          // Migrate old state that may not have showLanding
+          setState({ ...getInitialState(), ...parsed, showLanding: false });
+          setIsLightMode(parsed.profile?.themePreference === "light");
           setShowSetup(false);
         } catch {
           setState(getInitialState());
@@ -191,20 +199,21 @@ export default function KarmaApp() {
   const totalPoints = useMemo(() => state.logs.reduce((sum, log) => sum + log.points, 0), [state.logs]);
   const avoidedCarbon = useMemo(() => Math.abs(state.logs.filter((log) => log.carbon < 0).reduce((sum, log) => sum + log.carbon, 0)), [state.logs]);
   const earnedPoints = useMemo(() => state.logs.filter((log) => log.points > 0).reduce((sum, log) => sum + log.points, 0), [state.logs]);
-  const activeAction = state.actions.find((action) => action.status === "active") ?? state.actions[0];
+  const activeAction = state.actions.find((action) => action.status === "active") ?? state.actions.find((a) => a.status === "suggested");
   const storyCards = useMemo(() => getStoryCards(state.profile), [state.profile]);
-  
+
   useEffect(() => {
-    if (state.onboarded || showSetup) return;
+    if (state.onboarded || showSetup || state.showLanding) return;
     const timer = setInterval(() => {
       setStoryStep((prev) => (prev < storyCards.length - 1 ? prev + 1 : prev));
     }, 6000);
     return () => clearInterval(timer);
-  }, [state.onboarded, showSetup, storyCards.length]);
+  }, [state.onboarded, showSetup, state.showLanding, storyCards.length]);
 
-  const biggestLeak = useMemo(() => {
+  const biggestLeak = useMemo((): [Category, number] => {
     const totals = totalsByCategory(state.logs, "points");
-    return Object.entries(totals).sort((a, b) => b[1] - a[1])[0] as [Category, number];
+    const sorted = (Object.entries(totals) as [Category, number][]).sort((a, b) => b[1] - a[1]);
+    return sorted[0] ?? ["energy", 0];
   }, [state.logs]);
 
   function updateProfile(patch: Partial<Profile>) {
@@ -230,6 +239,7 @@ export default function KarmaApp() {
           return { ...action, status: previous?.status ?? (index === 0 ? "active" : "suggested") };
         }),
         onboarded: true,
+        showLanding: false,
       };
     });
     setIsLightMode(profile.themePreference === "light");
@@ -245,7 +255,7 @@ export default function KarmaApp() {
   }
 
   function finishOnboarding() {
-    setState((current) => ({ ...current, onboarded: true }));
+    setState((current) => ({ ...current, onboarded: true, showLanding: false }));
     setTab("track");
   }
 
@@ -275,15 +285,31 @@ export default function KarmaApp() {
   }
 
   function resetData() {
-    if (!window.confirm("Are you sure you want to reset all your data? This will completely clear your footprint, logs, and profile.")) return;
+    if (!window.confirm("Reset all data? This clears your footprint, logs, and profile.")) return;
     window.localStorage.removeItem(storageKey);
     setState(getInitialState());
     setTab("today");
     setStoryStep(0);
-    setShowSetup(true);
+    setShowSetup(false);
     setIsLightMode(false);
   }
 
+  // ── LANDING PAGE ───────────────────────────────────────────
+  if (!state.onboarded && state.showLanding) {
+    return (
+      <main className="min-h-screen overflow-hidden bg-background text-foreground">
+        <div className={`app-shell ${isLightMode ? "theme-light" : ""}`}>
+          <LandingPage
+            onStart={() => setState((s) => ({ ...s, showLanding: false }))}
+            toggleTheme={toggleTheme}
+            isLightMode={isLightMode}
+          />
+        </div>
+      </main>
+    );
+  }
+
+  // ── STORY / SETUP ──────────────────────────────────────────
   if (!state.onboarded) {
     const story = storyCards[storyStep] ?? storyCards[0];
     const StoryIcon = (LucideIcons[story.iconName as keyof typeof LucideIcons] || LucideIcons.Sparkles) as React.ComponentType<any>;
@@ -437,6 +463,7 @@ export default function KarmaApp() {
     );
   }
 
+  // ── MAIN APP ───────────────────────────────────────────────
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className={`app-shell ${isLightMode ? "theme-light" : ""}`}>
@@ -536,16 +563,219 @@ export default function KarmaApp() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────
+// LANDING PAGE — VC-ready cinematic first impression
+// ─────────────────────────────────────────────────────────────
+function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => void; toggleTheme: () => void; isLightMode: boolean }) {
+  const [globalTonnes, setGlobalTonnes] = useState(0);
+  const startRef = useRef(Date.now());
+
+  useEffect(() => {
+    const perSecond = worldCo2TonnesPerYear / (365 * 24 * 60 * 60);
+    const timer = setInterval(() => {
+      setGlobalTonnes(((Date.now() - startRef.current) / 1000) * perSecond);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const features = [
+    {
+      icon: TrendingUp,
+      accent: "text-sage",
+      glow: "drop-shadow-[0_0_12px_rgba(156,175,136,0.5)]",
+      title: "Find your hidden waste",
+      desc: "Karma diagnoses where your money, energy, and carbon are silently leaking — and ranks them by impact.",
+    },
+    {
+      icon: Zap,
+      accent: "text-amber-300",
+      glow: "drop-shadow-[0_0_12px_rgba(246,200,95,0.5)]",
+      title: "One action at a time",
+      desc: "No guilt, no overwhelming lists. One practical recommendation per week, matched to your lifestyle and motivation.",
+    },
+    {
+      icon: ShieldCheck,
+      accent: "text-sky-300",
+      glow: "drop-shadow-[0_0_12px_rgba(96,165,250,0.5)]",
+      title: "Personalized to India",
+      desc: "Built around Indian electricity bills, commute modes, food patterns, and real CO2 data from IEA 2024.",
+    },
+  ];
+
+  const stats = [
+    { value: "41.6 Gt", label: "Global CO2 emitted per year" },
+    { value: "2.8 Gt", label: "India's annual CO2 emissions" },
+    { value: "₹1,500+", label: "Monthly leak in an average household" },
+    { value: "<1 min", label: "Time to log your daily choices" },
+  ];
+
+  return (
+    <div className="relative min-h-screen flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-5 sm:px-10">
+        <div className="flex items-center gap-3">
+          <LogoMark />
+          <span className="text-lg font-semibold tracking-normal">Karma</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            className="secondary-button flex h-9 w-9 items-center justify-center p-0 border-sage/50"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+          >
+            {isLightMode ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <button className="primary-button" onClick={onStart}>
+            Explore <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <section className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center sm:px-10 sm:py-24">
+        {/* Badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8 inline-flex items-center gap-2 rounded-full border border-sage/30 bg-sage/10 px-4 py-2 text-xs font-medium text-sage backdrop-blur-sm"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
+          Live emissions ticking now
+        </motion.div>
+
+        {/* Live counter */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="mb-6 rounded-3xl border border-white/10 bg-white/5 px-8 py-5 backdrop-blur-xl"
+        >
+          <p className="text-xs uppercase tracking-[0.2em] text-white/40 mb-2">CO2 emitted since you opened this page</p>
+          <p className="font-outfit text-4xl sm:text-5xl font-medium tracking-tight text-white">
+            {Math.round(globalTonnes).toLocaleString("en-US")}
+            <span className="ml-2 text-xl text-white/50">tonnes</span>
+          </p>
+        </motion.div>
+
+        {/* Headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl text-balance"
+        >
+          Your lifestyle,{" "}
+          <span className="bg-gradient-to-r from-sage via-sky-300 to-amber-300 bg-clip-text text-transparent">
+            recalibrated.
+          </span>
+        </motion.h1>
+
+        {/* Subhead */}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="mt-6 max-w-xl text-lg leading-8 text-white/58"
+        >
+          Karma turns your daily choices into a weekly action plan that saves money, reduces waste, and lowers your carbon footprint — without the guilt.
+        </motion.p>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-10 flex flex-wrap items-center justify-center gap-4"
+        >
+          <button
+            className="primary-button text-base px-8 py-3.5 text-lg"
+            onClick={onStart}
+          >
+            Start tracking free <ArrowRight size={20} />
+          </button>
+          <span className="text-sm text-white/38">No account needed · Free forever</span>
+        </motion.div>
+      </section>
+
+      {/* Stats strip */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+        className="border-y border-white/8 bg-white/[0.025] px-6 py-8 sm:px-10"
+      >
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 sm:grid-cols-4">
+          {stats.map((stat) => (
+            <div key={stat.label} className="text-center">
+              <p className="font-outfit text-3xl font-medium tracking-tight">{stat.value}</p>
+              <p className="mt-1 text-xs leading-5 text-white/45">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* Feature cards */}
+      <section className="px-6 py-16 sm:px-10 sm:py-20">
+        <div className="mx-auto max-w-5xl">
+          <p className="mb-10 text-center text-xs font-medium uppercase tracking-[0.22em] text-sage">
+            Why Karma is different
+          </p>
+          <div className="grid gap-5 sm:grid-cols-3">
+            {features.map((feat, i) => {
+              const Icon = feat.icon;
+              return (
+                <motion.div
+                  key={feat.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6 + i * 0.1 }}
+                  className="panel p-6 group hover:-translate-y-1 transition-transform duration-300"
+                >
+                  <div className={`mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 ${feat.accent} ${feat.glow}`}>
+                    <Icon size={22} />
+                  </div>
+                  <h3 className="mb-2 font-semibold">{feat.title}</h3>
+                  <p className="text-sm leading-6 text-white/55">{feat.desc}</p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="px-6 pb-20 text-center sm:px-10">
+        <div className="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/[0.03] p-10 backdrop-blur-xl">
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.22em] text-white/45">Ready?</p>
+          <h2 className="text-3xl font-semibold tracking-tight">Your hidden waste is waiting to be found.</h2>
+          <p className="mt-4 text-sm leading-6 text-white/50">Takes 3 minutes to set up. Works offline. No signup required.</p>
+          <button className="primary-button mt-8 w-full justify-center py-4 text-base" onClick={onStart}>
+            Build my footprint <ArrowRight size={18} />
+          </button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/8 px-6 py-6 text-center">
+        <p className="text-xs text-white/28">
+          Karma · Carbon data from IEA & Global Carbon Budget 2024 · Built for PromptWars
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 function Header({ compact, profile, isLightMode, toggleTheme }: { compact: boolean; profile: Profile; isLightMode: boolean; toggleTheme: () => void }) {
+  const displayName = profile.name ? `${profile.name}'s tracker` : "Carbon emissions tracker";
   return (
     <div className={`flex items-center justify-between ${compact ? "py-2" : ""}`}>
       <div className="flex items-center gap-3">
         <LogoMark />
         <div>
           <p className="text-lg font-semibold tracking-normal">Karma</p>
-          <p className="text-xs text-white/45">
-            {profile.name ? `${profile.name}'s carbon tracker` : "Carbon emissions tracker"}
-          </p>
+          <p className="text-xs text-white/45">{displayName}</p>
         </div>
       </div>
       <button
@@ -613,7 +843,6 @@ function SetupOverlay({
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Profile>({
     ...profile,
-    timezone: profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   });
 
   const setupSteps = [
@@ -718,6 +947,13 @@ function SetupOverlay({
                         />
                       </Field>
                     </div>
+                    <Field label="Diet pattern">
+                      <select className="input" value={draft.diet} onChange={(e) => setDraft((current) => ({ ...current, diet: e.target.value as Diet }))}>
+                        <option value="veg">Vegetarian / plant-based</option>
+                        <option value="mixed">Mixed (some meat)</option>
+                        <option value="high-meat">High-meat diet</option>
+                      </select>
+                    </Field>
                   </motion.div>
                 )}
 
@@ -725,7 +961,7 @@ function SetupOverlay({
                   <motion.div key="step-1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
                     <Field label="Commute mode">
                       <select className="input" value={draft.commuteMode} onChange={(e) => setDraft((current) => ({ ...current, commuteMode: e.target.value as Profile["commuteMode"] }))}>
-                        {["cab", "car", "auto", "metro", "bike", "walk"].map((mode) => <option key={mode}>{mode}</option>)}
+                        {[["cab", "Cab / Ola / Uber"], ["car", "Own car"], ["auto", "Auto-rickshaw"], ["metro", "Metro / Train"], ["bike", "Bike / Cycle"], ["walk", "Walk"]].map(([val, label]) => <option key={val} value={val}>{label}</option>)}
                       </select>
                     </Field>
                     <Field label="AC usage (hours/day)">
@@ -758,11 +994,19 @@ function SetupOverlay({
                         <option value="save">Reduce cost / save money</option>
                         <option value="comfort">Keep comfort</option>
                         <option value="health">Protect health</option>
-                        <option value="waste">Cut daily waste</option>
-                        <option value="organize">Feel organized</option>
+                        <option value="organize">Feel organized / reduce clutter</option>
                         <option value="climate">Reduce climate impact</option>
                       </select>
                     </Field>
+                    {/* Summary of what they've set */}
+                    {draft.name && (
+                      <div className="rounded-2xl border border-sage/20 bg-sage/5 p-4 text-sm leading-6 text-white/70">
+                        <p className="font-medium text-sage mb-1">Your profile</p>
+                        <p>{draft.name} · {[draft.city, draft.country].filter(Boolean).join(", ") || "Location not set"}</p>
+                        <p>{draft.acHours}h AC/day · {draft.commuteKm} km/week by {draft.commuteMode} · {draft.deliveries} deliveries/week</p>
+                        <p>Diet: {draft.diet === "veg" ? "Vegetarian" : draft.diet === "mixed" ? "Mixed" : "High-meat"} · Household: {draft.household}</p>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -821,8 +1065,8 @@ function OnboardingCard({
         </Field>
         <Field label="Commute">
           <select className="input" value={profile.commuteMode} onChange={(e) => updateProfile({ commuteMode: e.target.value as Profile["commuteMode"] })}>
-            {["cab", "car", "auto", "metro", "bike", "walk"].map((mode) => (
-              <option key={mode}>{mode}</option>
+            {[["cab", "Cab / Ola / Uber"], ["car", "Own car"], ["auto", "Auto"], ["metro", "Metro / Train"], ["bike", "Bike"], ["walk", "Walk"]].map(([val, label]) => (
+              <option key={val} value={val}>{label}</option>
             ))}
           </select>
         </Field>
@@ -832,13 +1076,11 @@ function OnboardingCard({
         <Field label="Food delivery/week">
           <Stepper value={profile.deliveries} min={0} max={14} onChange={(value) => updateProfile({ deliveries: value })} />
         </Field>
-        <Field label="Main motivation">
-          <select className="input" value={profile.motivation} onChange={(e) => updateProfile({ motivation: e.target.value as Motivation })}>
-            <option value="save">Earn points</option>
-            <option value="comfort">Keep comfort</option>
-            <option value="health">Improve health</option>
-            <option value="organize">Feel organized</option>
-            <option value="climate">Reduce impact</option>
+        <Field label="Diet pattern">
+          <select className="input" value={profile.diet} onChange={(e) => updateProfile({ diet: e.target.value as Diet })}>
+            <option value="veg">Vegetarian</option>
+            <option value="mixed">Mixed</option>
+            <option value="high-meat">High-meat</option>
           </select>
         </Field>
       </div>
@@ -872,18 +1114,22 @@ function TodayView({
   goTrack: () => void;
   completeAction: (id: string) => void;
 }) {
-  const LeakIcon = categoryMeta[biggestLeak[0]].icon;
+  const LeakIcon = categoryMeta[biggestLeak?.[0] ?? "energy"].icon;
   const [worldTonnes, setWorldTonnes] = useState(0);
+  const startRef = useRef(Date.now());
   const monthlyLeak = calculateMonthlyLeak(profile);
 
   useEffect(() => {
     const perSecond = worldCo2TonnesPerYear / (365 * 24 * 60 * 60);
-    const startedAt = Date.now();
     const timer = window.setInterval(() => {
-      setWorldTonnes(((Date.now() - startedAt) / 1000) * perSecond);
+      setWorldTonnes(((Date.now() - startRef.current) / 1000) * perSecond);
     }, 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+  // Personalized hero headline
+  const heroLocation = [profile.city, profile.country].filter(Boolean).join(", ") || "your city";
+  const heroGreeting = profile.name ? `${profile.name}'s` : "Your";
 
   return (
     <div className="space-y-5">
@@ -891,7 +1137,7 @@ function TodayView({
         <section className="hero-panel relative overflow-hidden p-5 sm:p-7">
           <div className="grid gap-7 lg:grid-cols-[1fr_280px] lg:items-center">
             <div>
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-sage">Carbon tracker for {profile.city}</p>
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-sage">{heroGreeting} carbon tracker · {heroLocation}</p>
               <h1 className="max-w-2xl text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl text-balance">
                 See which daily choices create your footprint.
               </h1>
@@ -913,7 +1159,7 @@ function TodayView({
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-white/45">This week&apos;s leak</p>
-              <h2 className="mt-2 text-3xl font-semibold">{categoryMeta[biggestLeak[0]].label}</h2>
+              <h2 className="mt-2 text-3xl font-semibold">{categoryMeta[biggestLeak?.[0] ?? "energy"].label}</h2>
             </div>
             <div className="icon-tile"><LeakIcon size={22} /></div>
           </div>
@@ -928,7 +1174,7 @@ function TodayView({
         <MetricCard icon={Star} label="Karma Points impact" value={formatPoints(totalPoints)} context="Positive means saved/avoided; negative means extra spend/leak" />
         <MetricCard icon={Wind} label="CO2e avoided" value={carbon(avoidedCarbon)} context="From cleaner choices you logged" />
         <div data-testid="monthly-leak">
-          <MetricCard icon={WalletCards} label="Monthly lifestyle leak" value={formatRupees(monthlyLeak).replace(/^\+/, '')} context="Estimated leak from AC, deliveries, and commute" />
+          <MetricCard icon={WalletCards} label="Monthly lifestyle leak" value={formatRupees(monthlyLeak).replace(/^\+/, '')} context={`Based on ${profile.city || "your city"}'s AC, commute & deliveries`} />
         </div>
       </div>
 
@@ -939,7 +1185,7 @@ function TodayView({
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
-        <WorldEmissionsPanel worldTonnes={worldTonnes} />
+        <WorldEmissionsPanel worldTonnes={worldTonnes} profile={profile} />
         <ContributionPanel avoidedCarbon={avoidedCarbon} earnedPoints={earnedPoints} />
       </div>
 
@@ -948,16 +1194,20 @@ function TodayView({
           <div className="mb-5 flex items-center justify-between">
             <div>
               <p className="text-sm text-white/45">Active action</p>
-              <h2 className="text-2xl font-semibold">{activeAction?.title}</h2>
+              <h2 className="text-2xl font-semibold">{activeAction?.title ?? "No active action yet"}</h2>
             </div>
             <Target className="text-sage" />
           </div>
-          <p className="text-sm leading-6 text-white/62">{activeAction?.why}</p>
-          <div className="mt-5 rounded-2xl bg-white/[0.04] p-4 text-sm text-white/70">{activeAction?.step}</div>
-          {activeAction && (
-            <button className="primary-button mt-5 w-full justify-center" onClick={() => completeAction(activeAction.id)}>
-              Mark done <Check size={18} />
-            </button>
+          {activeAction ? (
+            <>
+              <p className="text-sm leading-6 text-white/62">{activeAction.why}</p>
+              <div className="mt-5 rounded-2xl bg-white/[0.04] p-4 text-sm text-white/70">{activeAction.step}</div>
+              <button className="primary-button mt-5 w-full justify-center" onClick={() => completeAction(activeAction.id)}>
+                Mark done <Check size={18} />
+              </button>
+            </>
+          ) : (
+            <p className="mt-4 text-sm text-white/45">Log some choices in the Track tab to generate your first action.</p>
           )}
         </section>
 
@@ -969,11 +1219,18 @@ function TodayView({
             </div>
             <Clock3 className="text-white/50" />
           </div>
-          <div className="space-y-3">
-            {logs.slice(0, 5).map((log) => (
-              <LogRow key={log.id} log={log} />
-            ))}
-          </div>
+          {logs.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-8 text-center text-sm text-white/38">
+              <Plus size={24} className="text-white/20" />
+              <p>No logs yet. Head to Track to start.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {logs.slice(0, 5).map((log) => (
+                <LogRow key={log.id} log={log} />
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>
@@ -998,82 +1255,19 @@ function TrackView({
 
   function submitManualLog() {
     if (!manual.label.trim()) return;
-
-    const labelText = manual.label.toLowerCase();
-    let carbonVal = 0;
-    
-    const numbers = labelText.match(/\d+(\.\d+)?/g)?.map(Number) || [1];
-
-    if (selectedCategory === "energy") {
-      let hours = 4;
-      const hourMatch = labelText.match(/(\d+(\.\d+)?)\s*(hour|hr|h\b)/);
-      if (hourMatch) {
-        hours = parseFloat(hourMatch[1]);
-      } else if (numbers.length === 1 && !labelText.match(/at \d+/)) {
-        hours = numbers[0];
-      } else if (numbers.length > 1) {
-        hours = numbers[1]; // A guess if temp is first, hours is second
-      }
-
-      let tempMatch = labelText.match(/(?:at\s*)?(\d{2})(?:\s*degrees?|\s*c)?/);
-      let temp = tempMatch ? parseInt(tempMatch[1]) : 24;
-
-      if (labelText.includes("compressor off") || labelText.includes("fan only") || labelText.includes("without outdoor unit") || labelText.includes("no outdoor unit")) {
-         carbonVal = hours * 0.15;
-      } else if (temp >= 24) {
-         carbonVal = hours * 0.35;
-      } else if (temp < 24) {
-         carbonVal = hours * 0.8;
-      } else {
-         carbonVal = hours * 0.8;
-      }
-    } else if (selectedCategory === "transport") {
-      let km = 10;
-      const kmMatch = labelText.match(/(\d+(\.\d+)?)\s*(km|kilometer|mile|m\b)/);
-      if (kmMatch) km = parseFloat(kmMatch[1]);
-      else if (numbers.length > 0) km = numbers[0];
-
-      if (labelText.includes("walk") || labelText.includes("bike") || labelText.includes("cycle")) {
-         carbonVal = -(km * 0.25);
-      } else if (labelText.includes("metro") || labelText.includes("train") || labelText.includes("bus")) {
-         carbonVal = km * 0.04;
-      } else {
-         carbonVal = km * 0.25;
-      }
-    } else if (selectedCategory === "food") {
-      const items = numbers[0] > 10 ? 1 : numbers[0];
-      if (labelText.includes("waste") || labelText.includes("threw")) {
-         carbonVal = items * 2.5;
-      } else if (labelText.includes("delivery") || labelText.includes("order") || labelText.includes("zomato") || labelText.includes("swiggy")) {
-         carbonVal = items * 1.5;
-      } else if (labelText.includes("home") || labelText.includes("cook")) {
-         carbonVal = -(items * 1.5);
-      } else {
-         carbonVal = items * 1.0;
-      }
-    } else {
-      const isAvoided = labelText.includes("avoid") || labelText.includes("instead") || labelText.includes("already") || labelText.includes("stop") || labelText.includes("less") || labelText.includes("save") || labelText.includes("without");
-      const baseCarbon = selectedCategory === "shopping" ? 3.0 : 1.5;
-      carbonVal = isAvoided ? -baseCarbon : baseCarbon;
-    }
-
-    // Keep estimates grounded
-    if (carbonVal > 50) carbonVal = 50;
-    if (carbonVal < -50) carbonVal = -50;
-
     addLog({
       category: selectedCategory,
-      label: manual.label.trim(),
-      carbon: carbonVal,
-      points: Math.round(-carbonVal * 100),
-      note: manual.note.trim() || "Estimated by Karma based on your manual entry.",
+      label: manual.label,
+      carbon: manual.carbon,
+      points: manual.points,
+      note: manual.note || "Manually logged entry.",
     });
     setManual({ label: "", carbon: 0, points: 0, note: "" });
   }
 
   return (
     <div className="space-y-5">
-      <PageTitle eyebrow="Log" title="Log what actually happened, not what the app assumes." subtitle="Use a quick tile, or add your own entry if you already run AC efficiently, walk often, or have a different routine." />
+      <PageTitle eyebrow="Track" title="Log today's choices. This is where the numbers start." subtitle="Each tile under a minute. Pick the closest option and confirm. Karma does the rest." />
       <div className="grid gap-3 sm:grid-cols-5">
         {(Object.keys(categoryMeta) as Category[]).map((category) => {
           const Icon = categoryMeta[category].icon;
@@ -1089,21 +1283,24 @@ function TrackView({
           );
         })}
       </div>
-      <section className="grid gap-4 md:grid-cols-3">
-        {quickLogs[selectedCategory].map((entry) => (
-          <button
-            key={entry.label}
-            onClick={() => addLog(entry)}
-            className="panel p-5 text-left transition hover:-translate-y-1 hover:border-white/20"
-          >
-            <p className="text-lg font-semibold">{entry.label}</p>
-            <p className="mt-3 min-h-16 text-sm leading-6 text-white/60">{entry.note}</p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <span className={`metric-pill ${entry.points < 0 ? "text-emerald-200" : "text-amber-200"}`}>{formatPoints(entry.points)}</span>
-              <span className={`metric-pill ${entry.carbon < 0 ? "text-emerald-200" : "text-amber-200"}`}>{carbon(entry.carbon)}</span>
-            </div>
-          </button>
-        ))}
+      <section className="panel p-5">
+        <h2 className="mb-5 text-2xl font-semibold">{categoryMeta[selectedCategory].label} choices</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {quickLogs[selectedCategory].map((entry) => (
+            <button
+              key={entry.label}
+              onClick={() => addLog(entry)}
+              className={`rounded-2xl border p-4 text-left transition hover:bg-white/[0.06] ${entry.points > 0 ? "border-sage/30 bg-sage/5" : "border-white/10 bg-white/[0.035]"}`}
+            >
+              <p className="text-sm font-medium">{entry.label}</p>
+              <p className="mt-3 min-h-16 text-sm leading-6 text-white/60">{entry.note}</p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <span className={`metric-pill ${entry.points < 0 ? "text-emerald-200" : "text-amber-200"}`}>{formatPoints(entry.points)}</span>
+                <span className={`metric-pill ${entry.carbon < 0 ? "text-emerald-200" : "text-amber-200"}`}>{carbon(entry.carbon)}</span>
+              </div>
+            </button>
+          ))}
+        </div>
       </section>
       <section className="panel p-5">
         <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
@@ -1119,7 +1316,7 @@ function TrackView({
               className="input"
               value={manual.label}
               onChange={(e) => setManual((current) => ({ ...current, label: e.target.value }))}
-              placeholder="Example: AC at 26 C for 3 hours"
+              placeholder="Example: AC at 26°C for 3 hours"
             />
           </Field>
         </div>
@@ -1142,23 +1339,45 @@ function TrackView({
 }
 
 function InsightsView({ profile, logs, actions }: { profile: Profile; logs: LogEntry[]; actions: Action[] }) {
-  const top = actions[0];
+  const top = actions.find(a => a.status !== "dismissed") ?? actions[0];
   const categoryTotals = totalsByCategory(logs, "carbon");
   const sorted = (Object.entries(categoryTotals) as [Category, number][]).sort((a, b) => b[1] - a[1]);
 
+  // Personalized copy
+  const firstName = profile.name ? profile.name.split(" ")[0] : null;
+  const location = profile.city || profile.country || "your area";
+  const householdText = profile.household > 1 ? `your household of ${profile.household}` : "your lifestyle";
+  const dietText = profile.diet === "veg" ? "plant-based" : profile.diet === "high-meat" ? "high-meat" : "mixed";
+
+  if (logs.length === 0) {
+    return (
+      <div className="space-y-5">
+        <PageTitle eyebrow="Insights" title="Your weekly diagnosis is practical, not preachy." subtitle="Start logging choices to unlock your personal diagnosis." />
+        <div className="panel flex flex-col items-center gap-4 p-12 text-center">
+          <Sparkles size={32} className="text-white/20" />
+          <h2 className="text-xl font-semibold">No data yet</h2>
+          <p className="max-w-sm text-sm leading-6 text-white/45">Log a few choices in the Track tab and Karma will diagnose your biggest source of hidden waste.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
-      <PageTitle eyebrow="Insights" title="Your weekly diagnosis is practical, not preachy." subtitle="AI-ready structure with deterministic fallback, assumptions, ranked actions, and safe copy." />
+      <PageTitle eyebrow="Insights" title="Your weekly diagnosis is practical, not preachy." subtitle={`Based on ${householdText}'s logged choices with a ${dietText} diet in ${location}.`} />
       <section className="hero-panel p-5 sm:p-7">
         <div className="mb-5 flex items-center gap-3">
           <div className="icon-tile"><Sparkles size={22} /></div>
           <div>
             <p className="text-sm text-white/45">Karma Coach</p>
-            <h2 className="text-2xl font-semibold">Your {profile.city} routine has one obvious first move.</h2>
+            <h2 className="text-2xl font-semibold">
+              {firstName ? `${firstName}'s` : "Your"} {location} routine has one obvious first move.
+            </h2>
           </div>
         </div>
         <p className="max-w-3xl text-lg leading-8 text-white/72">
-          {top?.why} Start with &quot;{top?.title}&quot; because it matches your motivation, repeats weekly, and has a visible benefit within seven days.
+          {top?.why ?? "Log more choices to unlock your personalized diagnosis."}{" "}
+          {top && <>Start with &quot;{top.title}&quot; because it matches your motivation, repeats weekly, and has a visible benefit within seven days.</>}
         </p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <MiniStat label="Confidence" value="Medium" />
@@ -1172,14 +1391,15 @@ function InsightsView({ profile, logs, actions }: { profile: Profile; logs: LogE
           {sorted.map(([category, value]) => {
             const Icon = categoryMeta[category].icon;
             const width = Math.min(100, Math.max(8, Math.abs(value) * 8));
+            const isGood = value <= 0;
             return (
               <div key={category}>
                 <div className="mb-2 flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2 text-white/75"><Icon size={16} /> {categoryMeta[category].label}</span>
-                  <span className="text-white/45">{carbon(value)}</span>
+                  <span className={value > 0 ? "text-coral" : "text-sage"}>{carbon(value)}</span>
                 </div>
                 <div className="h-2 rounded-full bg-white/[0.05]">
-                  <div className="h-full rounded-full bg-sage" style={{ width: `${width}%` }} />
+                  <div className={`h-full rounded-full ${isGood ? "bg-sage" : "bg-coral"}`} style={{ width: `${width}%` }} />
                 </div>
               </div>
             );
@@ -1191,39 +1411,48 @@ function InsightsView({ profile, logs, actions }: { profile: Profile; logs: LogE
 }
 
 function PlanView({ actions, setActionStatus }: { actions: Action[]; setActionStatus: (id: string, status: Action["status"]) => void }) {
+  const visible = actions.filter((action) => action.status !== "dismissed");
   return (
     <div className="space-y-5">
       <PageTitle eyebrow="Plan" title="Three small moves. No heroic lifestyle change." subtitle="Actions are ranked by impact, ease, motivation match, and whether the habit repeats." />
-      <div className="grid gap-4">
-        {actions.filter((action) => action.status !== "dismissed").map((action, index) => {
-          const Icon = categoryMeta[action.category].icon;
-          return (
-            <section key={action.id} className="panel grid gap-5 p-5 md:grid-cols-[auto_1fr_auto] md:items-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.06] text-white">
-                <Icon size={24} />
-              </div>
-              <div>
-                <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-white/55">#{index + 1}</span>
-                  <span className="rounded-full bg-sage/10 px-2.5 py-1 text-xs text-sage">{action.status}</span>
-                  <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-white/55">{action.effort} effort</span>
+      {visible.length === 0 ? (
+        <div className="panel flex flex-col items-center gap-4 p-12 text-center">
+          <Check size={32} className="text-sage" />
+          <h2 className="text-xl font-semibold">All actions dismissed</h2>
+          <p className="max-w-sm text-sm leading-6 text-white/45">Log more choices to unlock fresh recommendations.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {visible.map((action, index) => {
+            const Icon = categoryMeta[action.category].icon;
+            return (
+              <section key={action.id} className="panel grid gap-5 p-5 md:grid-cols-[auto_1fr_auto] md:items-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.06] text-white">
+                  <Icon size={24} />
                 </div>
-                <h2 className="text-xl font-semibold">{action.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-white/60">{action.why}</p>
-                <p className="mt-3 rounded-2xl bg-white/[0.035] p-3 text-sm text-white/75">{action.step}</p>
-              </div>
-              <div className="flex flex-col gap-2 md:w-40">
-                <span className="metric-pill justify-center">{formatPoints(action.points)}</span>
-                <span className="metric-pill justify-center">{carbon(action.carbon)}</span>
-                <button className="primary-button justify-center" onClick={() => setActionStatus(action.id, action.status === "done" ? "active" : "done")}>
-                  {action.status === "done" ? "Reopen" : "Done"}
-                </button>
-                <button className="secondary-button justify-center" onClick={() => setActionStatus(action.id, "dismissed")}>Dismiss</button>
-              </div>
-            </section>
-          );
-        })}
-      </div>
+                <div>
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-white/55">#{index + 1}</span>
+                    <span className="rounded-full bg-sage/10 px-2.5 py-1 text-xs text-sage">{action.status}</span>
+                    <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-white/55">{action.effort} effort</span>
+                  </div>
+                  <h2 className="text-xl font-semibold">{action.title}</h2>
+                  <p className="mt-2 text-sm leading-6 text-white/60">{action.why}</p>
+                  <p className="mt-3 rounded-2xl bg-white/[0.035] p-3 text-sm text-white/75">{action.step}</p>
+                </div>
+                <div className="flex flex-col gap-2 md:w-40">
+                  <span className="metric-pill justify-center">{formatPoints(action.points)}</span>
+                  <span className="metric-pill justify-center">{carbon(action.carbon)}</span>
+                  <button className="primary-button justify-center" onClick={() => setActionStatus(action.id, action.status === "done" ? "active" : "done")}>
+                    {action.status === "done" ? "Reopen" : "Done"}
+                  </button>
+                  <button className="secondary-button justify-center" onClick={() => setActionStatus(action.id, "dismissed")}>Dismiss</button>
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1241,26 +1470,37 @@ function RecapView({
   earnedPoints: number;
   doneCount: number;
 }) {
+  const location = [profile.city, profile.country].filter(Boolean).join(", ") || "Your city";
+  const hasData = logs.length > 0;
+
   return (
     <div className="space-y-5">
       <PageTitle eyebrow="Recap" title="A weekly story worth sharing." subtitle="Status comes from actions completed and choices logged, not generic badges." />
-      <section className="share-card">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.22em] text-white/45">Karma week</p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-normal">Less waste, same life.</h2>
+      {!hasData ? (
+        <div className="panel flex flex-col items-center gap-4 p-12 text-center">
+          <BarChart3 size={32} className="text-white/20" />
+          <h2 className="text-xl font-semibold">Nothing to recap yet</h2>
+          <p className="max-w-sm text-sm leading-6 text-white/45">Log your first choice in the Track tab and your weekly story will appear here.</p>
+        </div>
+      ) : (
+        <section className="share-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.22em] text-white/45">Karma week</p>
+              <h2 className="mt-3 text-4xl font-semibold tracking-normal">Less waste, same life.</h2>
+            </div>
+            <Share2 className="text-sage" />
           </div>
-          <Share2 className="text-sage" />
-        </div>
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
-          <MiniStat label="City" value={profile.city} />
-          <MiniStat label="Money avoided" value={formatRupees(earnedPoints)} />
-          <MiniStat label="Impact avoided" value={carbon(avoidedCarbon)} />
-        </div>
-        <p className="mt-10 max-w-2xl text-lg leading-8 text-white/70">
-          You logged {logs.length} choices and completed {doneCount} action{doneCount === 1 ? "" : "s"}. The point is not perfection. The point is finding the leak and closing it before it becomes normal.
-        </p>
-      </section>
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            <MiniStat label="Location" value={location} />
+            <MiniStat label="Money avoided" value={formatRupees(earnedPoints)} />
+            <MiniStat label="Impact avoided" value={carbon(avoidedCarbon)} />
+          </div>
+          <p className="mt-10 max-w-2xl text-lg leading-8 text-white/70">
+            {profile.name ? `${profile.name}, you` : "You"} logged {logs.length} choice{logs.length === 1 ? "" : "s"} and completed {doneCount} action{doneCount === 1 ? "" : "s"}. The point is not perfection. The point is finding the leak and closing it before it becomes normal.
+          </p>
+        </section>
+      )}
     </div>
   );
 }
@@ -1293,16 +1533,20 @@ function ProfileView({
       <PageTitle eyebrow="Profile" title="Edit your carbon baseline." subtitle="These values shape your footprint estimate, insights, and action plan. Changes apply after you save." />
       <div className="panel grid gap-4 p-5 sm:grid-cols-2">
         <Field label="Name">
-          <input className="input" value={draft.name} onChange={(e) => setDraft((current) => ({ ...current, name: e.target.value }))} />
+          <input className="input" value={draft.name} onChange={(e) => setDraft((current) => ({ ...current, name: e.target.value }))} placeholder="Your name" />
         </Field>
         <Field label="Country">
-          <input className="input" value={draft.country} onChange={(e) => setDraft((current) => ({ ...current, country: e.target.value }))} placeholder="Country" />
+          <input className="input" value={draft.country} onChange={(e) => setDraft((current) => ({ ...current, country: e.target.value }))} placeholder="e.g. India" />
         </Field>
         <Field label="City">
-          <input className="input" value={draft.city} onChange={(e) => setDraft((current) => ({ ...current, city: e.target.value }))} placeholder="City" />
+          <input className="input" value={draft.city} onChange={(e) => setDraft((current) => ({ ...current, city: e.target.value }))} placeholder="e.g. Mumbai" />
         </Field>
-        <Field label="Timezone">
-          <input className="input" value={draft.timezone} onChange={(e) => setDraft((current) => ({ ...current, timezone: e.target.value }))} placeholder="Timezone" />
+        <Field label="Diet pattern">
+          <select className="input" value={draft.diet} onChange={(e) => setDraft((current) => ({ ...current, diet: e.target.value as Diet }))}>
+            <option value="veg">Vegetarian / plant-based</option>
+            <option value="mixed">Mixed (some meat)</option>
+            <option value="high-meat">High-meat diet</option>
+          </select>
         </Field>
         <Field label="Household">
           <Stepper value={draft.household} min={1} max={8} onChange={(value) => setDraft((current) => ({ ...current, household: value }))} />
@@ -1315,11 +1559,23 @@ function ProfileView({
         </Field>
         <Field label="Commute mode">
           <select className="input" value={draft.commuteMode} onChange={(e) => setDraft((current) => ({ ...current, commuteMode: e.target.value as Profile["commuteMode"] }))}>
-            {["cab", "car", "auto", "metro", "bike", "walk"].map((mode) => <option key={mode}>{mode}</option>)}
+            {[["cab", "Cab / Ola / Uber"], ["car", "Own car"], ["auto", "Auto-rickshaw"], ["metro", "Metro / Train"], ["bike", "Bike / Cycle"], ["walk", "Walk"]].map(([val, label]) => <option key={val} value={val}>{label}</option>)}
           </select>
+        </Field>
+        <Field label="Weekly commute distance">
+          <Range value={draft.commuteKm} min={0} max={180} step={5} onChange={(value) => setDraft((current) => ({ ...current, commuteKm: value }))} suffix={`${draft.commuteKm} km`} />
         </Field>
         <Field label="Food delivery/week">
           <Stepper value={draft.deliveries} min={0} max={14} onChange={(value) => setDraft((current) => ({ ...current, deliveries: value }))} />
+        </Field>
+        <Field label="Motivation">
+          <select className="input" value={draft.motivation} onChange={(e) => setDraft((current) => ({ ...current, motivation: e.target.value as Motivation }))}>
+            <option value="save">Reduce cost / save money</option>
+            <option value="comfort">Keep comfort</option>
+            <option value="health">Protect health</option>
+            <option value="organize">Feel organized / reduce clutter</option>
+            <option value="climate">Reduce climate impact</option>
+          </select>
         </Field>
         <Field label="Theme">
           <select className="input" value={draft.themePreference} onChange={(e) => setDraft((current) => ({ ...current, themePreference: e.target.value as Profile["themePreference"] }))}>
@@ -1350,7 +1606,7 @@ function MetricCard({ icon: Icon, label, value, context }: { icon: LucideIcon; l
         <p className="text-sm text-white/45">{label}</p>
         <Icon className="text-sage" size={20} />
       </div>
-      <p className="text-3xl font-semibold tracking-normal">{value}</p>
+      <p className="font-outfit text-3xl font-medium tracking-tight">{value}</p>
       <p className="mt-3 text-sm leading-5 text-white/48">{context}</p>
     </section>
   );
@@ -1393,7 +1649,7 @@ function CarbonConstellation({ logs }: { logs: LogEntry[] }) {
               animate={{ y: [y, y - 5, y] }}
               transition={{ duration: 3 + Math.abs(node.value) / 2, repeat: Infinity, ease: "easeInOut" }}
             >
-              <div className={`grid h-12 w-12 place-items-center rounded-2xl border ${isCleaner ? "border-sage/40 bg-sage/15 drop-shadow-[0_0_15px_rgba(156,175,136,0.5)]" : "border-coral/35 bg-coral/12 drop-shadow-[0_0_15px_rgba(249,115,106,0.5)]"}`}>
+              <div className={`grid h-12 w-12 place-items-center rounded-2xl border backdrop-blur-md ${isCleaner ? "border-sage/40 bg-sage/15 drop-shadow-[0_0_15px_rgba(156,175,136,0.5)]" : "border-coral/35 bg-coral/12 drop-shadow-[0_0_15px_rgba(249,115,106,0.5)]"}`}>
                 <Icon className={isCleaner ? "text-sage" : "text-coral"} size={19} />
               </div>
             </motion.div>
@@ -1407,16 +1663,32 @@ function CarbonConstellation({ logs }: { logs: LogEntry[] }) {
   );
 }
 
-function WorldEmissionsPanel({ worldTonnes }: { worldTonnes: number }) {
-  const perSecond = worldCo2TonnesPerYear / (365 * 24 * 60 * 60);
+// ── WORLD EMISSIONS — country-aware ───────────────────────────
+function WorldEmissionsPanel({ worldTonnes, profile }: { worldTonnes: number; profile: Profile }) {
+  const globalPerSecond = worldCo2TonnesPerYear / (365 * 24 * 60 * 60);
+  const countryData = getCountryEmissions(profile.country);
+  const countryPerSecond = countryData ? (countryData.annual * 1_000_000) / (365 * 24 * 60 * 60) : null;
+
+  // Time elapsed from the parent component's worldTonnes
+  const elapsed = globalPerSecond > 0 ? worldTonnes / globalPerSecond : 0;
+  const countryTonnes = countryPerSecond ? elapsed * countryPerSecond : null;
+
   return (
     <section className="panel overflow-hidden p-5">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-white/45">Live global emissions estimate</p>
-          <h2 className="mt-2 text-3xl font-semibold">{Math.round(worldTonnes).toLocaleString("en-US")} t CO2</h2>
+        <div className="min-w-0">
+          <p className="text-sm text-white/45">Live global emissions</p>
+          <h2 className="mt-2 font-outfit text-3xl font-medium tracking-tight">{Math.round(worldTonnes).toLocaleString("en-US")} t CO2</h2>
+          {countryTonnes !== null && countryData && (
+            <div className="mt-3 rounded-xl border border-sky-300/20 bg-sky-300/5 px-3 py-2">
+              <p className="text-xs text-white/40">{countryData.label} this session</p>
+              <p className="font-outfit text-xl font-medium tracking-tight text-sky-300">
+                {Math.round(countryTonnes).toLocaleString("en-US")} t CO2
+              </p>
+            </div>
+          )}
         </div>
-        <div className="icon-tile"><Wind size={22} /></div>
+        <div className="icon-tile shrink-0"><Wind size={22} /></div>
       </div>
       <div className="mt-6 h-28 overflow-hidden rounded-3xl border border-white/10 bg-[#070a0f]/55 p-3">
         <div className="flex h-full items-end gap-1">
@@ -1431,7 +1703,9 @@ function WorldEmissionsPanel({ worldTonnes }: { worldTonnes: number }) {
         </div>
       </div>
       <p className="mt-4 text-sm leading-6 text-white/58">
-        Every second, human activity adds about {Math.round(perSecond).toLocaleString("en-US")} tonnes of CO2 to the atmosphere. This tracker helps you step out of that flow. (Based on Global Carbon Budget 2024)
+        Every second, ~{Math.round(globalPerSecond).toLocaleString("en-US")} tonnes of CO2 enter the atmosphere.{" "}
+        {countryData ? `${countryData.label} contributes ~${Math.round(countryPerSecond!)} t/s.` : ""}
+        {" "}Source: Global Carbon Budget 2024.
       </p>
     </section>
   );
@@ -1445,12 +1719,12 @@ function ContributionPanel({ avoidedCarbon, earnedPoints }: { avoidedCarbon: num
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm text-white/45">Your contribution</p>
-          <h2 className="mt-2 text-3xl font-semibold">{carbon(avoidedCarbon)} avoided</h2>
+          <h2 className="mt-2 font-outfit text-3xl font-medium tracking-tight">{carbon(avoidedCarbon)} avoided</h2>
         </div>
         <div className="icon-tile"><Sparkles size={22} /></div>
       </div>
       <p className="mt-5 text-sm leading-6 text-white/64">
-        This is your visible contribution to cleaner shared air. This is equivalent to allowing {treesGrown.toFixed(1)} trees to grow for a whole year, or potentially reducing severe respiratory health risks for {Math.max(1, Math.round(healthRiskReduced))} individuals in high-density areas.
+        This is your visible contribution to cleaner shared air. Equivalent to {treesGrown.toFixed(1)} trees growing for a year, or reducing health risks for {Math.max(1, Math.round(healthRiskReduced))} people in high-density areas.
       </p>
       <div className="mt-5 grid grid-cols-2 gap-3">
         <MiniStat label="Compared with inaction" value={`${Math.max(1, Math.round(avoidedCarbon * 8))}% better`} />
@@ -1465,7 +1739,7 @@ function ContributionPanel({ avoidedCarbon, earnedPoints }: { avoidedCarbon: num
 
 function StepHint({ number, title, text }: { number: string; title: string; text: string }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-4">
+    <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-4 backdrop-blur-xl">
       <div className="mb-4 grid h-9 w-9 place-items-center rounded-2xl bg-sage/15 text-sm font-semibold text-sage">{number}</div>
       <h3 className="font-semibold">{title}</h3>
       <p className="mt-2 text-sm leading-6 text-white/55">{text}</p>
@@ -1477,7 +1751,7 @@ function MiniStat({ label, value }: { label: string; value?: string | number }) 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
       <p className="text-xs uppercase tracking-[0.16em] text-white/38">{label}</p>
-      <p className="mt-2 font-outfit text-2xl font-medium tracking-tight">{value}</p>
+      <p className="mt-2 font-outfit text-2xl font-medium tracking-tight">{value ?? "—"}</p>
     </div>
   );
 }
@@ -1494,7 +1768,7 @@ function LogRow({ log }: { log: LogEntry }) {
         <p className="truncate text-xs text-white/45">{log.note}</p>
       </div>
       <div className="text-right text-xs text-white/55">
-        <p>{formatPoints(log.points)}</p>
+        <p className={log.points > 0 ? "text-sage" : "text-coral"}>{formatPoints(log.points)}</p>
         <p>{carbon(log.carbon)}</p>
       </div>
     </div>

@@ -160,6 +160,15 @@ input:focus-visible {
   border-color: rgba(15, 23, 42, 0.12) !important;
 }
 
+.theme-light .bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.62) !important;
+}
+
+.theme-light .bg-white\/\[0\.025\] {
+  background-color: rgba(15, 23, 42, 0.03) !important;
+}
+
+
 .theme-light .input {
   border-color: rgba(15, 23, 42, 0.14);
   background: rgba(255, 255, 255, 0.72);
