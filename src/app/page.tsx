@@ -2122,12 +2122,12 @@ function CarbonConstellation({ logs }: { logs: LogEntry[] }) {
   const total = logs.reduce((sum, log) => sum + log.carbon, 0);
 
   return (
-    <div className="carbon-map" aria-label="Live carbon footprint map">
-      <div className="absolute left-4 top-4">
+    <div className="carbon-map relative flex min-h-[420px] flex-col justify-between p-5" aria-label="Live carbon footprint map">
+      <div className="relative z-10">
         <p className="text-xs uppercase tracking-[0.18em] text-white/38">Live footprint map</p>
         <p className="mt-1 font-outfit text-3xl font-medium tracking-tight">{carbon(total)}</p>
       </div>
-      <div className="absolute inset-0 mt-8 grid place-items-center">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <motion.div
           className="h-28 w-28 rounded-full border border-sage/35 bg-sage/10 drop-shadow-[0_0_25px_rgba(156,175,136,0.4)]"
           animate={{ scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
@@ -2143,7 +2143,7 @@ function CarbonConstellation({ logs }: { logs: LogEntry[] }) {
           return (
             <motion.div
               key={node.category}
-              className="absolute"
+              className="absolute pointer-events-auto"
               style={{ x, y }}
               animate={{ y: [y, y - 5, y] }}
               transition={{ duration: 3 + Math.abs(node.value) / 2, repeat: Infinity, ease: "easeInOut" }}
@@ -2155,7 +2155,7 @@ function CarbonConstellation({ logs }: { logs: LogEntry[] }) {
           );
         })}
       </div>
-      <p className="absolute bottom-4 left-4 right-4 text-xs leading-5 text-white/45">
+      <p className="relative z-10 mt-auto text-xs leading-5 text-white/45">
         Larger pressure appears where repeated habits add CO2e. Green nodes are choices that reduced impact.
       </p>
     </div>
