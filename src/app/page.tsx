@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight, Sun, Moon,
@@ -660,6 +661,7 @@ export default function KarmaApp() {
 // LANDING PAGE — VC-ready cinematic first impression
 // ─────────────────────────────────────────────────────────────
 function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => void; toggleTheme: () => void; isLightMode: boolean }) {
+  const { data: session } = useSession();
   const [globalTonnes, setGlobalTonnes] = useState(0);
   const [startTime] = useState(() => Date.now());
 
@@ -718,9 +720,15 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
           >
             {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
           </button>
-          <button className="primary-button" onClick={onStart}>
-            Explore <ArrowRight size={16} />
-          </button>
+          {session ? (
+            <button className="primary-button" onClick={onStart}>
+              Dashboard <ArrowRight size={16} />
+            </button>
+          ) : (
+            <button className="primary-button" onClick={() => signIn("google")}>
+              Sign In <ArrowRight size={16} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -791,11 +799,11 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
         >
           <button
             className="primary-button text-base px-10 py-4 text-lg font-semibold shadow-lg shadow-sage/20 transition-transform hover:scale-105 active:scale-95"
-            onClick={onStart}
+            onClick={session ? onStart : () => signIn("google")}
           >
-            Start tracking free <ArrowRight size={20} />
+            {session ? `Continue as ${session.user?.name?.split(' ')[0]}` : "Sign in with Google"} <ArrowRight size={20} />
           </button>
-          <span className="text-sm font-medium text-[var(--foreground)]/50 tracking-wide uppercase">No account needed · Free forever</span>
+          <span className="text-sm font-medium text-[var(--foreground)]/50 tracking-wide uppercase">Secure Google Authentication</span>
         </motion.div>
       </section>
 
@@ -851,9 +859,9 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
           <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--foreground)]/50 relative z-10">Ready?</p>
           <h2 className="text-3xl font-bold tracking-tight text-foreground relative z-10">Your hidden waste is waiting to be found.</h2>
-          <p className="mt-4 text-base leading-relaxed text-[var(--foreground)]/60 relative z-10">Takes 3 minutes to set up. Works offline. No signup required.</p>
-          <button className="primary-button mt-8 w-full justify-center py-4 text-lg font-medium relative z-10" onClick={onStart}>
-            Build my footprint <ArrowRight size={18} />
+          <p className="mt-4 text-base leading-relaxed text-[var(--foreground)]/60 relative z-10">Takes 3 minutes to set up. Secure Google Login.</p>
+          <button className="primary-button mt-8 w-full justify-center py-4 text-lg font-medium relative z-10" onClick={session ? onStart : () => signIn("google")}>
+            {session ? "Open Dashboard" : "Sign in with Google"} <ArrowRight size={18} />
           </button>
         </div>
       </section>
@@ -870,28 +878,41 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
 
 // ─────────────────────────────────────────────────────────────
 function Header({ compact, profile, isLightMode, toggleTheme }: { compact: boolean; profile: Profile; isLightMode: boolean; toggleTheme: () => void }) {
-  const displayName = profile.name ? `${profile.name}'s tracker` : "Carbon emissions tracker";
+  const { data: session } = useSession();
+  const displayName = session?.user?.name ? `${session.user.name}'s tracker` : (profile.name ? `${profile.name}'s tracker` : "Carbon emissions tracker");
+  
   return (
     <div className={`flex items-center justify-between ${compact ? "py-2" : ""}`}>
       <div className="flex items-center gap-3">
         <LogoMark />
         <div>
-          <p className="text-lg font-semibold tracking-normal">Karma</p>
-          <p className="text-xs text-white/45">{displayName}</p>
+          <p className="text-lg font-semibold tracking-normal text-foreground">Karma</p>
+          <p className="text-xs text-[var(--foreground)]/45">{displayName}</p>
         </div>
       </div>
-      <button
-        className="secondary-button flex h-9 w-9 items-center justify-center p-0 border-sage/50 transition-transform active:scale-95"
-        onClick={toggleTheme}
-        aria-label="Toggle theme"
-      >
-        <div className={`transition-all duration-500 ${isLightMode ? "rotate-[360deg] opacity-100" : "-rotate-90 opacity-0 absolute"}`}>
-          <Sun size={18} />
-        </div>
-        <div className={`transition-all duration-500 ${!isLightMode ? "rotate-0 opacity-100" : "rotate-90 opacity-0 absolute"}`}>
-          <Moon size={18} />
-        </div>
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          className="secondary-button flex h-9 w-9 items-center justify-center p-0 border-sage/50 transition-transform active:scale-95 text-foreground"
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+        >
+          <div className={`transition-all duration-500 ${isLightMode ? "rotate-[360deg] opacity-100" : "-rotate-90 opacity-0 absolute"}`}>
+            <Sun size={18} />
+          </div>
+          <div className={`transition-all duration-500 ${!isLightMode ? "rotate-0 opacity-100" : "rotate-90 opacity-0 absolute"}`}>
+            <Moon size={18} />
+          </div>
+        </button>
+        {session?.user && (
+          <button 
+            className="secondary-button h-9 px-3 text-xs flex items-center gap-2 border-sage/50 transition-colors hover:bg-coral/10 hover:text-coral hover:border-coral/50 text-foreground" 
+            onClick={() => signOut()}
+          >
+            {session.user.image && <img src={session.user.image} alt="Avatar" className="w-5 h-5 rounded-full" />}
+            Sign Out
+          </button>
+        )}
+      </div>
     </div>
   );
 }
