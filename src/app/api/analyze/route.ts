@@ -130,7 +130,9 @@ Calculation Rules:
      If the actual emissions are LESS than what they would have emitted in the baseline, this net delta will be NEGATIVE.
      For example: "ate 200g of chicken instead of 300g" -> Actual 200g chicken (approx 1.4 kg) minus Baseline 300g chicken (approx 2.1 kg) = -0.7 kg CO2e.
      For example: "took metro instead of auto for 10km" -> Actual metro (0.25 kg) minus Baseline auto (0.96 kg) = -0.71 kg CO2e.
+     SPECIAL CASE FOR AC TEMPERATURE: Higher temperatures use LESS energy (saves ~6% per degree). "Used AC at 27C instead of 24C" -> Actual 27C uses LESS energy than Baseline 24C, so the carbon delta is NEGATIVE.
      If actual emissions are less than baseline/replaced, the final "carbon" value MUST be NEGATIVE, and "points" must be POSITIVE.
+     If actual emissions are higher than baseline, the final "carbon" value MUST be POSITIVE, and "points" must be NEGATIVE.
 5. Karma points = Math.round(carbon * -100). (i.e. positive points for savings/negative carbon, negative points for emissions/positive carbon).
 6. Output a short 1-sentence note explaining the math.
 
