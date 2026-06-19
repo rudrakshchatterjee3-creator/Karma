@@ -839,7 +839,7 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
         {/* Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
-          className="max-w-4xl text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl text-balance text-foreground drop-shadow-sm"
+          className="max-w-5xl text-6xl font-extrabold leading-[1.05] tracking-tight sm:text-8xl lg:text-9xl text-balance text-foreground drop-shadow-sm"
         >
           Your lifestyle,{" "}
           <span 
@@ -853,7 +853,7 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
         {/* Subhead */}
         <motion.p
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-8 max-w-2xl text-xl leading-relaxed text-[var(--foreground)]/60 font-medium"
+          className="mt-8 max-w-3xl text-2xl leading-relaxed text-[var(--foreground)]/60 font-medium sm:text-3xl"
         >
           Karma diagnoses your daily choices into a weekly action plan that saves money, reduces waste, and lowers your carbon footprint — <span className="text-foreground">without the guilt.</span>
         </motion.p>
