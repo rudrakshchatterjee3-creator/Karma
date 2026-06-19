@@ -184,6 +184,8 @@ export async function POST(request: Request) {
     
     const { actionText, category: hintCategory } = result.data;
 
+    let geminiDebugError = "";
+
     // 1. Try server-side Google Gemini 1.5 Flash query if key exists
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
@@ -239,11 +241,10 @@ export async function POST(request: Request) {
             });
           }
         } else {
-          // const errText = await geminiRes.text();
-          // console.error(`Gemini API responded with error status ${geminiRes.status}: ${errText}`);
+          geminiDebugError = await geminiRes.text();
         }
-      } catch {
-        // console.error("Backend Gemini query failed, falling back to deterministic parser:", err);
+      } catch (e: any) {
+        geminiDebugError = e.message || "Fetch failed";
       }
     }
 
@@ -501,6 +502,7 @@ export async function POST(request: Request) {
       moneyDelta: Math.round(Math.abs(points) * 1.2),
       summary: note,
       sourceEngine: "physics_engine",
+      debugGeminiError: geminiDebugError,
     });
 
   } catch {
