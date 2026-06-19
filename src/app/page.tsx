@@ -2298,9 +2298,9 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 function Stepper({ value, min, max, onChange }: { value: number; min: number; max: number; onChange: (value: number) => void }) {
   return (
     <div className="flex h-12 items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-2">
-      <button className="h-9 w-9 rounded-xl bg-white/[0.06] text-lg" onClick={() => onChange(Math.max(min, value - 1))} type="button">-</button>
+      <button aria-label="Decrease" className="h-9 w-9 rounded-xl bg-white/[0.06] text-lg" onClick={() => onChange(Math.max(min, value - 1))} type="button">-</button>
       <span className="font-semibold">{value}</span>
-      <button className="h-9 w-9 rounded-xl bg-white/[0.06] text-lg" onClick={() => onChange(Math.min(max, value + 1))} type="button">+</button>
+      <button aria-label="Increase" className="h-9 w-9 rounded-xl bg-white/[0.06] text-lg" onClick={() => onChange(Math.min(max, value + 1))} type="button">+</button>
     </div>
   );
 }
