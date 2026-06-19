@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { type Profile, type LogEntry, createActions } from '@/utils/karmaLogic';
+import { type Profile, type LogEntry, createActions, defaultProfile } from '@/utils/karmaLogic';
 
 export const runtime = 'edge';
 
@@ -47,14 +47,44 @@ function parseJSONBlock(text: string) {
   }
 }
 
+import { z } from 'zod';
+
+const coachRequestSchema = z.object({
+  profile: z.object({
+    name: z.string().optional(),
+    city: z.string().optional(),
+    country: z.string().optional(),
+    motivation: z.string().optional(),
+    diet: z.string().optional(),
+    acHours: z.number().optional(),
+    commuteKm: z.number().optional(),
+    commuteMode: z.string().optional(),
+    deliveries: z.number().optional(),
+    household: z.number().optional(),
+    bill: z.number().optional(),
+  }).optional().default({}),
+  logs: z.array(z.object({
+    id: z.string(),
+    label: z.string(),
+    category: z.string(),
+    carbon: z.number(),
+    points: z.number(),
+    note: z.string().optional()
+  })).optional().default([]),
+});
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { profile, logs } = body as { profile?: Profile; logs?: LogEntry[] };
-
-    if (!profile || !logs) {
-      return NextResponse.json({ error: 'profile and logs are required' }, { status: 400 });
+    
+    const result = coachRequestSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json({ error: "Invalid input", details: result.error.format() }, { status: 400 });
     }
+    
+    // Merge with defaultProfile to ensure all required Profile fields (like themePreference) exist for TS
+    const profile = { ...defaultProfile, ...result.data.profile } as Profile;
+    const logs = result.data.logs as LogEntry[];
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {

@@ -1576,6 +1576,9 @@ function TrackView({
       </section>
 
       {/* ── SMART MANUAL ENTRY ─────────────────────────────────── */}
+      <div aria-live="polite" className="sr-only">
+        {estimate.status === "loading" ? "Analyzing your entry with Gemini AI..." : estimate.status === "done" ? "Analysis complete." : ""}
+      </div>
       <section className="panel p-5">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>

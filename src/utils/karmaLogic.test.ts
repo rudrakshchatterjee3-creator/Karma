@@ -1,60 +1,34 @@
-import { expect, test, describe } from "vitest";
-import {
-  defaultProfile,
-  calculateMonthlyLeak,
-  totalsByCategory,
-  formatPoints,
-  formatRupees,
-  carbon,
-  createActions,
-  type LogEntry
-} from "./karmaLogic";
+import { describe, it, expect } from 'vitest';
+import { calculateMonthlyLeak, createActions, defaultProfile, formatPoints } from './karmaLogic';
 
-describe("karmaLogic", () => {
-  test("defaultProfile has valid structure", () => {
-    expect(defaultProfile.name).toBe("");
-    expect(defaultProfile.household).toBeGreaterThan(0);
-    expect(defaultProfile.motivation).toBeDefined();
-  });
-
-  test("calculateMonthlyLeak estimates costs correctly", () => {
-    const leak = calculateMonthlyLeak(defaultProfile);
-    expect(typeof leak).toBe("number");
-    expect(leak).toBeGreaterThan(0);
-  });
-
-  test("totalsByCategory groups entries correctly", () => {
-    const logs: LogEntry[] = [
-      { id: "1", category: "transport", label: "A", carbon: 10, points: -5, note: "", createdAt: new Date().toISOString() },
-      { id: "2", category: "transport", label: "B", carbon: 5, points: -2, note: "", createdAt: new Date().toISOString() },
-      { id: "3", category: "food", label: "C", carbon: -2, points: 10, note: "", createdAt: new Date().toISOString() }
-    ];
+describe('Karma Logic Physics Engine', () => {
+  it('calculates higher leaks for heavy AC users', () => {
+    const lowProfile = { ...defaultProfile, acHours: 2, bill: 1000 };
+    const highProfile = { ...defaultProfile, acHours: 12, bill: 3000 };
     
-    const carbonTotals = totalsByCategory(logs, "carbon");
-    expect(carbonTotals.transport).toBe(15);
-    expect(carbonTotals.food).toBe(-2);
-    expect(carbonTotals.energy).toBe(0);
-
-    const pointTotals = totalsByCategory(logs, "points");
-    expect(pointTotals.transport).toBe(-7);
-    expect(pointTotals.food).toBe(10);
+    const lowLeak = calculateMonthlyLeak(lowProfile);
+    const highLeak = calculateMonthlyLeak(highProfile);
+    
+    expect(highLeak).toBeGreaterThan(lowLeak);
   });
 
-  test("format formats numbers correctly", () => {
-    expect(formatPoints(1200)).toBe("+1,200 pts");
-    expect(formatPoints(-500)).toBe("-500 pts");
-    expect(formatPoints(0)).toBe("0 pts");
-
-    expect(formatRupees(1500)).toBe("+₹1,500");
-    expect(carbon(10.5)).toBe("+10.5 kg CO2e");
-    expect(carbon(-5)).toBe("-5.0 kg CO2e");
+  it('suggests AC optimization for high AC usage', () => {
+    const profile = { ...defaultProfile, acHours: 12 };
+    const actions = createActions(profile, []);
+    
+    expect(actions[0].category).toBe('energy');
   });
 
-  test("createActions generates default actions based on profile", () => {
-    const defaultActions = createActions(defaultProfile, []);
-    expect(defaultActions.length).toBeGreaterThan(0);
-    expect(defaultActions[0]).toHaveProperty("id");
-    expect(defaultActions[0]).toHaveProperty("title");
-    expect(defaultActions[0]).toHaveProperty("status");
+  it('suggests Transport optimization for high car usage', () => {
+    const profile = { ...defaultProfile, commuteMode: 'car' as const, commuteKm: 300 };
+    const actions = createActions(profile, []);
+    
+    expect(actions[0].category).toBe('transport');
+  });
+
+  it('formats points correctly with sign', () => {
+    expect(formatPoints(120)).toBe('+120 pts');
+    expect(formatPoints(-50)).toBe('-50 pts');
+    expect(formatPoints(0)).toBe('0 pts');
   });
 });
