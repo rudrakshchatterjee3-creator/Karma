@@ -74,7 +74,7 @@ ${logs.length === 0 ? '- No logs added yet.' : logs.map(l => `- [${l.category}] 
 
 Task: Create a personalized weekly report and suggest 3 custom actions. Return JSON matching the schema.`;
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -121,7 +121,7 @@ Task: Create a personalized weekly report and suggest 3 custom actions. Return J
             const parsed = parseJSONBlock(content);
             return NextResponse.json({
               ...parsed,
-              sourceEngine: "gemini_1_5_flash"
+              sourceEngine: "gemini_3_1_flash_lite"
             });
           }
         } else {

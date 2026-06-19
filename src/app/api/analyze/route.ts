@@ -190,7 +190,7 @@ export async function POST(request: Request) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
       try {
-        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -237,7 +237,7 @@ export async function POST(request: Request) {
               frictionDelta: parseFloat((carbonRounded / 10).toFixed(3)),
               moneyDelta: Math.round(Math.abs(points) * 1.2),
               summary: parsed.note,
-              sourceEngine: "gemini_1_5_flash"
+              sourceEngine: "gemini_3_1_flash_lite"
             });
           }
         } else {
