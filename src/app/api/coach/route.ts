@@ -39,7 +39,7 @@ function parseJSONBlock(text: string) {
     if (jsonMatch) {
       try {
         return JSON.parse(jsonMatch[0]);
-      } catch (e) {
+      } catch {
         // console.error("Failed to parse matched JSON block:", e);
       }
     }
@@ -125,10 +125,10 @@ Task: Create a personalized weekly report and suggest 3 custom actions. Return J
             });
           }
         } else {
-          const errText = await res.text();
+          // const errText = await res.text();
           // console.error(`Gemini API responded with error status ${res.status}: ${errText}`);
         }
-      } catch (err) {
+      } catch {
         // console.error("AI Coach query failed, falling back to deterministic calculations:", err);
       }
     }
@@ -163,7 +163,7 @@ Task: Create a personalized weekly report and suggest 3 custom actions. Return J
       sourceEngine: "physics_engine"
     });
 
-  } catch (err) {
+  } catch {
     // console.error('Coach API error:', err);
     return NextResponse.json({ error: 'Failed to process AI coach' }, { status: 500 });
   }

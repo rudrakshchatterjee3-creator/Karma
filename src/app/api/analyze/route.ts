@@ -157,7 +157,7 @@ function parseJSONBlock(text: string) {
     if (jsonMatch) {
       try {
         return JSON.parse(jsonMatch[0]);
-      } catch (e) {
+      } catch {
         // console.error("Failed to parse matched JSON block:", e);
       }
     }
@@ -239,10 +239,10 @@ export async function POST(request: Request) {
             });
           }
         } else {
-          const errText = await geminiRes.text();
+          // const errText = await geminiRes.text();
           // console.error(`Gemini API responded with error status ${geminiRes.status}: ${errText}`);
         }
-      } catch (err) {
+      } catch {
         // console.error("Backend Gemini query failed, falling back to deterministic parser:", err);
       }
     }
@@ -503,7 +503,7 @@ export async function POST(request: Request) {
       sourceEngine: "physics_engine",
     });
 
-  } catch (err) {
+  } catch {
     // console.error('Analyze error:', err);
     return NextResponse.json({ error: 'Failed to analyze' }, { status: 500 });
   }
