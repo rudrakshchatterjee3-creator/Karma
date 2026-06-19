@@ -1043,7 +1043,7 @@ function Header({ compact, profile, onLogoClick }: { compact: boolean; profile: 
 function ThemeToggle({ isLightMode, toggleTheme }: { isLightMode: boolean; toggleTheme: () => void }) {
   return (
     <button
-      className="secondary-button absolute top-5 right-4 sm:top-5 sm:right-6 lg:top-5 lg:right-8 z-50 flex h-10 w-10 items-center justify-center rounded-full p-0 border-sage/50 transition-transform active:scale-95 text-foreground shadow-lg backdrop-blur-md"
+      className="secondary-button absolute top-5 right-4 sm:top-5 sm:right-6 lg:top-5 lg:right-8 z-[100] flex h-10 w-10 items-center justify-center rounded-full p-0 border-sage/50 transition-transform active:scale-95 text-foreground shadow-lg backdrop-blur-md"
       onClick={toggleTheme}
       aria-label="Toggle theme"
     >
