@@ -14,46 +14,30 @@ const getGoogleSecret = () => ["GOCSPX", "-PfKHqi--sxUm_", "Yqa26xu8wjnzbZ0"].jo
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
-let nextAuthInstance: any = null;
+const googleId = process.env.AUTH_GOOGLE_ID || getGoogleId();
+const googleSecret = process.env.AUTH_GOOGLE_SECRET || getGoogleSecret();
+const authSecret = process.env.AUTH_SECRET || getSecret();
 
-const getNextAuth = () => {
-  if (!nextAuthInstance) {
-    // Edge runtimes make process.env completely immutable. We CANNOT assign to it.
-    // Instead, we evaluate into local variables and pass directly into the provider.
-    const googleId = process.env.AUTH_GOOGLE_ID || getGoogleId();
-    const googleSecret = process.env.AUTH_GOOGLE_SECRET || getGoogleSecret();
-    const authSecret = process.env.AUTH_SECRET || getSecret();
+const nextAuthInstance = NextAuth({
+  providers: [
+    Google({
+      clientId: googleId,
+      clientSecret: googleSecret,
+    }),
+  ],
+  trustHost: true,
+  secret: authSecret,
+  session: { strategy: "jwt" },
+  callbacks: {
+    jwt({ token, user }) {
+      if (user) token.id = user.id;
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user) session.user.id = token.id as string;
+      return session;
+    },
+  },
+});
 
-    nextAuthInstance = NextAuth({
-      providers: [
-        Google({
-          clientId: googleId,
-          clientSecret: googleSecret,
-        }),
-      ],
-      trustHost: true, // This completely removes the need for NEXTAUTH_URL or AUTH_URL
-      secret: authSecret,
-      session: { strategy: "jwt" },
-      callbacks: {
-        jwt({ token, user }) {
-          if (user) token.id = user.id;
-          return token;
-        },
-        session({ session, token }) {
-          if (session.user) session.user.id = token.id as string;
-          return session;
-        },
-      },
-    });
-  }
-  return nextAuthInstance;
-};
-
-export const handlers = {
-  GET: (...args: any[]) => getNextAuth().handlers.GET(...args),
-  POST: (...args: any[]) => getNextAuth().handlers.POST(...args)
-};
-
-export const auth = (...args: any[]) => getNextAuth().auth(...args);
-export const signIn = (...args: any[]) => getNextAuth().signIn(...args);
-export const signOut = (...args: any[]) => getNextAuth().signOut(...args);
+export const { handlers, auth, signIn, signOut } = nextAuthInstance;
