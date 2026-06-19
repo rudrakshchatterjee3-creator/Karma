@@ -14,28 +14,30 @@ const getGoogleSecret = () => ["GOCSPX", "-PfKHqi--sxUm_", "Yqa26xu8wjnzbZ0"].jo
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
-const injectFallbacks = () => {
-  if (!process.env.AUTH_GOOGLE_ID) process.env.AUTH_GOOGLE_ID = getGoogleId();
-  if (!process.env.AUTH_GOOGLE_SECRET) process.env.AUTH_GOOGLE_SECRET = getGoogleSecret();
-  if (!process.env.AUTH_SECRET) process.env.AUTH_SECRET = getSecret();
-  if (!process.env.AUTH_URL) process.env.AUTH_URL = "https://karma-3jf.pages.dev";
-  if (!process.env.NEXTAUTH_URL) process.env.NEXTAUTH_URL = "https://karma-3jf.pages.dev";
-};
-
 let nextAuthInstance: any = null;
 
 const getNextAuth = () => {
   if (!nextAuthInstance) {
-    injectFallbacks();
+    // Edge runtimes make process.env immutable, so we evaluate into local variables
+    // rather than trying to mutate process.env dynamically.
+    const googleId = process.env.AUTH_GOOGLE_ID || getGoogleId();
+    const googleSecret = process.env.AUTH_GOOGLE_SECRET || getGoogleSecret();
+    const authSecret = process.env.AUTH_SECRET || getSecret();
+
+    // NextAuth v5 requires NEXTAUTH_URL to be defined in edge environments sometimes
+    if (!process.env.AUTH_URL) {
+      (process as any).env.AUTH_URL = "https://karma-3jf.pages.dev";
+    }
+
     nextAuthInstance = NextAuth({
       providers: [
         Google({
-          clientId: process.env.AUTH_GOOGLE_ID,
-          clientSecret: process.env.AUTH_GOOGLE_SECRET,
+          clientId: googleId,
+          clientSecret: googleSecret,
         }),
       ],
       trustHost: true,
-      secret: process.env.AUTH_SECRET,
+      secret: authSecret,
       session: { strategy: "jwt" },
       callbacks: {
         jwt({ token, user }) {
