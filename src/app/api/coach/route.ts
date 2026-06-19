@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'profile and logs are required' }, { status: 400 });
     }
 
-    const apiKey = process.env.NVIDIA_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
       try {
         const userPrompt = `User Profile:
@@ -74,36 +74,34 @@ ${logs.length === 0 ? '- No logs added yet.' : logs.map(l => `- [${l.category}] 
 
 Task: Create a personalized weekly report and suggest 3 custom actions. Return JSON matching the schema.`;
 
-        const res = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-            model: "meta/llama-3.1-8b-instruct",
-            messages: [
-              { role: "system", content: SYSTEM_PROMPT },
-              { role: "user", content: userPrompt }
-            ],
-            temperature: 0.2,
-            max_tokens: 600,
+            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: [{ parts: [{ text: userPrompt }] }],
+            generationConfig: {
+              temperature: 0.2,
+              responseMimeType: "application/json"
+            }
           }),
         });
 
         if (res.ok) {
           const data = await res.json();
-          const content = data.choices?.[0]?.message?.content;
+          const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
           if (content) {
             const parsed = parseJSONBlock(content);
             return NextResponse.json({
               ...parsed,
-              sourceEngine: "nvidia_nim"
+              sourceEngine: "gemini_1_5_flash"
             });
           }
         } else {
           const errText = await res.text();
-          // console.error(`NVIDIA NIM responded with error status ${res.status}: ${errText}`);
+          // console.error(`Gemini API responded with error status ${res.status}: ${errText}`);
         }
       } catch (err) {
         // console.error("AI Coach query failed, falling back to deterministic calculations:", err);

@@ -239,7 +239,7 @@ export default function KarmaApp() {
     headline: string;
     summary: string;
     actions: Action[];
-    sourceEngine: "nvidia_nim" | "physics_engine";
+    sourceEngine: "gemini_1_5_flash" | "physics_engine";
   } | null>(null);
   const [coachLoading, setCoachLoading] = useState(false);
 
@@ -260,7 +260,7 @@ export default function KarmaApp() {
           headline: string;
           summary: string;
           actions: Record<string, unknown>[];
-          sourceEngine: "nvidia_nim" | "physics_engine";
+          sourceEngine: "gemini_1_5_flash" | "physics_engine";
         };
         if (!active) return;
         
@@ -1641,7 +1641,7 @@ function TrackView({
               <div className="flex flex-wrap items-center gap-3 border-b border-white/8 px-4 py-3">
                 <Sparkles size={14} className="text-sage" />
                 <span className="text-xs font-medium uppercase tracking-[0.16em] text-white/50">Estimated impact</span>
-                {estimate.sourceEngine === "nvidia_nim" ? (
+                {estimate.sourceEngine === "gemini_1_5_flash" ? (
                   <span className="rounded-full border border-sky-400/25 bg-sky-400/8 px-2 py-0.5 text-[10px] font-bold text-sky-400 uppercase tracking-wide flex items-center gap-1">
                     <Sparkles size={10} className="animate-ai-sparkle text-sky-400" />
                     AI Estimated
@@ -1734,7 +1734,7 @@ function InsightsView({
   coachReport: {
     headline: string;
     summary: string;
-    sourceEngine: "nvidia_nim" | "physics_engine";
+    sourceEngine: "gemini_1_5_flash" | "physics_engine";
   } | null;
   coachLoading: boolean;
 }) {
@@ -1789,7 +1789,7 @@ function InsightsView({
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-white/45">Karma Coach</p>
                   {coachReport && (
-                    coachReport.sourceEngine === "nvidia_nim" ? (
+                    coachReport.sourceEngine === "gemini_1_5_flash" ? (
                       <span className="rounded-full border border-sky-400/25 bg-sky-400/8 px-2 py-0.5 text-[9px] font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1">
                         <Sparkles size={10} className="animate-ai-sparkle text-sky-400" />
                         AI Estimated
@@ -1828,7 +1828,7 @@ function InsightsView({
               </div>
             )}
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <MiniStat label="Analysis Confidence" value={coachReport && coachReport.sourceEngine === "nvidia_nim" ? "High" : "Medium"} />
+              <MiniStat label="Analysis Confidence" value={coachReport && coachReport.sourceEngine === "gemini_1_5_flash" ? "High" : "Medium"} />
               <MiniStat label="Effort required" value={top?.effort === "low" ? "Under 10 min" : "Plan once"} />
               <MiniStat label="Estimated upside" value={top ? `${formatPoints(top.points)} / week` : "-"} />
             </div>

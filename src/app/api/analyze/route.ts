@@ -184,30 +184,28 @@ export async function POST(request: Request) {
     
     const { actionText, category: hintCategory } = result.data;
 
-    // 1. Try server-side NVIDIA NIM query if key exists
-    const apiKey = process.env.NVIDIA_API_KEY;
+    // 1. Try server-side Google Gemini 1.5 Flash query if key exists
+    const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
       try {
-        const nimRes = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-            model: "meta/llama-3.1-8b-instruct",
-            messages: [
-              { role: "system", content: SYSTEM_PROMPT },
-              { role: "user", content: actionText },
-            ],
-            temperature: 0.0,
-            max_tokens: 400,
+            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: [{ parts: [{ text: actionText }] }],
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: "application/json"
+            }
           }),
         });
 
-        if (nimRes.ok) {
-          const data = await nimRes.json();
-          const content = data.choices?.[0]?.message?.content;
+        if (geminiRes.ok) {
+          const data = await geminiRes.json();
+          const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
           if (content) {
             const parsed = parseJSONBlock(content);
             const carbonRounded = parseFloat(parsed.carbon.toFixed(2));
@@ -225,15 +223,15 @@ export async function POST(request: Request) {
               frictionDelta: parseFloat((carbonRounded / 10).toFixed(3)),
               moneyDelta: Math.round(Math.abs(points) * 1.2),
               summary: parsed.note,
-              sourceEngine: "nvidia_nim"
+              sourceEngine: "gemini_1_5_flash"
             });
           }
         } else {
-          const errText = await nimRes.text();
-          // console.error(`NVIDIA NIM responded with error status ${nimRes.status}: ${errText}`);
+          const errText = await geminiRes.text();
+          // console.error(`Gemini API responded with error status ${geminiRes.status}: ${errText}`);
         }
       } catch (err) {
-        // console.error("Backend NVIDIA NIM query failed, falling back to deterministic parser:", err);
+        // console.error("Backend Gemini query failed, falling back to deterministic parser:", err);
       }
     }
 
