@@ -849,17 +849,17 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-8 max-w-3xl text-2xl leading-relaxed text-[var(--foreground)]/60 font-medium sm:text-3xl"
         >
-          Karma diagnoses your daily choices into a weekly action plan that saves money, reduces waste, and lowers your carbon footprint — <span className="text-foreground">without the guilt.</span>
+          Karma diagnoses your daily choices into a weekly action plan that saves money, reduces waste, and lowers your carbon footprint - <span className="text-foreground">without the guilt.</span>
         </motion.p>
 
         {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-12 flex flex-col items-center justify-center gap-4"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="mt-12 relative group inline-block">
+          <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-sage via-sky-400 to-sage opacity-40 blur-xl group-hover:opacity-60 transition-opacity duration-500 animate-pulse"></div>
           <button
-            className="primary-button text-base px-10 py-4 text-lg font-semibold shadow-[0_0_40px_rgba(156,175,136,0.3)] transition-all hover:scale-105 active:scale-95"
-            onClick={session ? onStart : () => signIn("google")}
+            onClick={() => {
+              if (!session) signIn("google", { callbackUrl: "/" });
+            }}
+            className="relative flex items-center justify-center gap-3 rounded-full bg-foreground px-10 py-5 text-lg font-bold text-background transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)]"
           >
             {session ? "Open Dashboard" : "Sign in with Google"} <ArrowRight size={20} />
           </button>
@@ -906,7 +906,7 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
                   </div>
                   <h3 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">Find your hidden waste</h3>
                   <p className="text-[var(--foreground)]/60 text-base max-w-sm leading-relaxed">
-                    Karma diagnoses where your money, energy, and carbon are silently leaking — and ranks them by impact.
+                    Karma diagnoses where your money, energy, and carbon are silently leaking and ranks them by impact.
                   </p>
                 </div>
                 
@@ -1588,7 +1588,7 @@ function TrackView({
           </div>
         </div>
 
-        <Field label="What happened? (be specific — include distance, hours, or count)">
+        <Field label="What happened? (be specific: include distance, hours, or count)">
           <div className="relative">
             <input
               className="input pr-10"
@@ -1830,7 +1830,7 @@ function InsightsView({
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <MiniStat label="Analysis Confidence" value={coachReport && coachReport.sourceEngine === "nvidia_nim" ? "High" : "Medium"} />
               <MiniStat label="Effort required" value={top?.effort === "low" ? "Under 10 min" : "Plan once"} />
-              <MiniStat label="Estimated upside" value={top ? `${formatPoints(top.points)} / week` : "—"} />
+              <MiniStat label="Estimated upside" value={top ? `${formatPoints(top.points)} / week` : "-"} />
             </div>
           </>
         )}
@@ -2249,7 +2249,7 @@ function MiniStat({ label, value }: { label: string; value?: string | number }) 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
       <p className="text-xs uppercase tracking-[0.16em] text-white/38">{label}</p>
-      <p className="mt-2 font-outfit text-2xl font-medium tracking-tight">{value ?? "—"}</p>
+      <p className="mt-2 font-outfit text-2xl font-medium tracking-tight">{value ?? "-"}</p>
     </div>
   );
 }

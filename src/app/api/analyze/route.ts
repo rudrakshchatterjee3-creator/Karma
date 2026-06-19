@@ -306,10 +306,10 @@ export async function POST(request: Request) {
           carbonKg = dist * EF.flight_short;
           note = `Flight of ~${dist} km estimated at ${EF.flight_short} kg CO2e/km.`;
           confidence = km ? 'high' : 'medium';
-          if (!km) assumptions.push('Distance assumed 500 km — update for accuracy.');
+          if (!km) assumptions.push('Distance assumed 500 km - update for accuracy.');
         } else if (isEV) {
           carbonKg = -0.5;
-          note = 'Electric vehicle — near-zero tailpipe emissions on Indian grid mix.';
+          note = 'Electric vehicle - near-zero tailpipe emissions on Indian grid mix.';
           confidence = 'high';
           assumptions.push(`Saving vs. equivalent petrol car trip of ~${km ?? 3} km.`);
         } else if (isBike) {
@@ -320,13 +320,13 @@ export async function POST(request: Request) {
           carbonKg = dist * ef;
           note = `${dist} km on bike (${isE20 ? 'E20' : 'petrol'}${isFast ? ', high-speed' : ''}): ${ef} kg CO2e/km.`;
           confidence = km ? 'high' : 'medium';
-          if (!km) assumptions.push('Distance assumed 10 km — mention "X km" for better accuracy.');
+          if (!km) assumptions.push('Distance assumed 10 km - mention "X km" for better accuracy.');
         } else if (isCar) {
           const dist = km ?? 15;
           carbonKg = dist * EF.car_petrol;
           note = `${dist} km by car: ${EF.car_petrol} kg CO2e/km (petrol).`;
           confidence = km ? 'high' : 'medium';
-          if (!km) assumptions.push('Distance assumed 15 km — mention "X km" for better accuracy.');
+          if (!km) assumptions.push('Distance assumed 15 km - mention "X km" for better accuracy.');
         } else if (isWalk || isCycle) {
           carbonKg = 0;
           note = 'Walking or cycling produces zero direct emissions. Well done.';
@@ -339,7 +339,7 @@ export async function POST(request: Request) {
           carbonKg = dist * ef;
           note = `${dist} km by ${t.includes('auto') ? 'auto' : 'cab'}: ${ef} kg CO2e/km.`;
           confidence = km ? 'high' : 'medium';
-          if (!km) assumptions.push('Distance assumed 10 km — mention "X km" for better accuracy.');
+          if (!km) assumptions.push('Distance assumed 10 km - mention "X km" for better accuracy.');
         } else if (isMetro) {
           const dist = km ?? 10;
           carbonKg = -(dist * (EF.car_petrol - EF.metro)); // saving vs driving
@@ -396,7 +396,7 @@ export async function POST(request: Request) {
 
         if (t.includes('off') || t.includes('unplugged') || t.includes('saved')) {
           carbonKg = -Math.abs(carbonKg);
-          note = 'Turning off / saving — converted to avoided emissions.';
+          note = 'Turning off / saving - converted to avoided emissions.';
         }
 
       } else if (isFood) {
@@ -457,7 +457,7 @@ export async function POST(request: Request) {
           confidence = 'medium';
         } else if (isRecycle) {
           carbonKg = -0.3;
-          note = 'Waste segregation enables recycling — estimated 0.3 kg CO2e avoided.';
+          note = 'Waste segregation enables recycling - estimated 0.3 kg CO2e avoided.';
           confidence = 'medium';
         } else {
           carbonKg = -0.2;

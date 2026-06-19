@@ -208,7 +208,7 @@ export function getStoryCards(profile: Profile): StoryCard[] {
       image: "/images/story_energy.png",
       metric: `${acWaste} kg`,
       metricLabel: "weekly AC footprint",
-      insight: "Running your AC at 18°C doesn't cool the room faster—it just burns money and grid power.",
+      insight: "Running your AC at 18°C doesn't cool the room faster - it just burns money and grid power.",
       iconName: "ThermometerSun",
       accent: "text-amber-300",
     },
