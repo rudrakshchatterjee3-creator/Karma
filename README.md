@@ -1,75 +1,70 @@
 # Karma
 
-**A personal waste and carbon intelligence app that turns daily choices into a weekly action plan.**
+> **𝑴𝒐𝒔𝒕 𝒄𝒂𝒓𝒃𝒐𝒏 𝒕𝒓𝒂𝒄𝒌𝒆𝒓𝒔 𝒇𝒂𝒊𝒍 𝒃𝒆𝒄𝒂𝒖𝒔𝒆 𝒕𝒉𝒆𝒚 𝒃𝒖𝒊𝒍𝒅 𝒂 𝒅𝒂𝒕𝒂𝒃𝒂𝒔𝒆, 𝒏𝒐𝒕 𝒂 𝒑𝒓𝒐𝒅𝒖𝒄𝒕.**
+
+Karma is a production-grade behavior engine built for the **PromptWars Virtual Hackathon by Hack2Skill and Google for Developers**. Instead of using environmental guilt and generic charts, Karma proves that reducing your carbon footprint is actually just a byproduct of saving your own money, comfort, and time.
+
+🔗 **Production URL**: [karma-3jf.pages.dev](https://karma-3jf.pages.dev)
 
 ---
 
-## 🌍 The Problem
-A normal Tuesday doesn't feel expensive. But small, invisible leaks add up—running the AC too cold, taking an unnecessary cab, throwing away delivery packaging. In one month, those leaks can become thousands of rupees lost, hours wasted in traffic, and a heavier carbon footprint. 
+## 🚀 The Architecture
 
-Most carbon calculators lead with guilt: *"You emitted 12kg of CO2 today. Save the planet."*  
-We believe that guilt doesn't scale. Self-interest does.
+Karma was built with strict production standards, pushing the boundaries of edge compute and AI integration:
 
-## 💡 The Solution
-**Karma is not a generic carbon calculator.** It is a premium, India-first behavior-change product.
+### 🧠 Prompt Architecture & AI Edge Engineering
+Karma leverages **Google Gemini 3.1 Flash-Lite** as a strict computational reasoning engine deployed directly on the Cloudflare Edge runtime.
+- **Strict JSON Typing**: Gemini is constrained by a robust System Prompt instructing it to map free-text logs into strict, deterministic JSON schemas.
+- **Low Temperature (0.2)**: Maximizes structural consistency, prevents hallucinations, and ensures highly factual, conservative emission estimates based on real-world Indian grid-mix data.
 
-Karma helps you understand how daily choices affect your **money, comfort, health, time, and status**, then quietly connects those choices to carbon impact. By finding the hidden waste in your routine, Karma gives you simple, personalized ways to plug the leaks.
+### 🛡️ Zod Validation & Edge Security
+Incoming edge payloads are aggressively sanitized using `zod` to guarantee perfect structural consistency and zero API crashes. We do not blindly trust AI outputs or client inputs.
 
-### How it works:
-1. **Understand:** Read a short, cinematic story about hidden daily waste.
-2. **Profile:** Set a realistic baseline footprint based on your city, commute, and habits.
-3. **Track:** Fast, under-a-minute inputs for your transport, energy, food, and shopping choices.
-4. **Diagnose:** The AI Coach identifies the biggest "leak" in your lifestyle and explains why it matters.
-5. **Act:** Receive a small, practical action ranked by effort and personal benefit.
-6. **Improve:** Watch your weekly progress as you save money, avoid waste, and cut carbon.
+### 🧪 Tested Offline Physics Fallback
+If the Gemini API experiences network latency, Karma instantly falls back to a deterministic, zero-dependency local TypeScript physics engine. 
+- The offline fallback is thoroughly tested with an automated **Vitest** suite to ensure mathematical integrity.
 
----
-
-## ✨ Features
-- **Dynamic Storytelling Onboarding:** A personalized setup flow that frames carbon impact around your primary motivation.
-- **AI Coach & Analytics:** An intelligent server-side engine powered by NVIDIA NIM that parses free-form natural language logs (e.g. *"ate 200g of chicken instead of 300g"*) to calculate accurate avoided emissions and net deltas.
-- **Live Footprint Map:** An interactive, animated constellation that visualizes where your footprint pressure is coming from.
-- **Ranked Action Plan:** Suggests high-impact, low-effort lifestyle tweaks tailored exactly to your profile and tracked habits.
-- **Premium Cinematic UI:** A meticulous dark-mode-first aesthetic with a beautifully engineered "loop of feedback" interface.
+### ♿ Inclusive UI & Full-Stack Polish
+- **Stack**: Next.js 14, Strict TypeScript, Tailwind CSS, and Framer Motion.
+- **Auth**: Google OAuth via NextAuth, optimized to bypass strict Edge runtime limitations.
+- **Accessibility**: 100% WCAG AA compliant with hidden `aria-live` screen-reader announcers for real-time AI generation states.
+- **Aesthetic**: Premium dark-mode, fintech-inspired glassmorphism.
 
 ---
 
-## 🛠 Tech Stack & Architecture
-- **Framework:** Next.js (App Router)
-- **Styling:** Tailwind CSS (v4), Framer Motion for micro-animations
-- **AI Engine:** LLaMA 3.1 8B Instruct (via NVIDIA NIM API) running securely on server-side Edge functions (`/api/analyze` and `/api/coach`).
-- **Data Persistence:** Zero-dependency local-storage state management for instant loading and privacy, synced gracefully with backend compute.
+## 🎯 The Behavioral Hook
+
+The AI doesn't preach. It dynamically analyzes your local city (e.g., Delhi, Mumbai) and isolates your highest-leverage "lifestyle leaks" (AC usage, commute modes, food delivery frequency), ranking them by immediate financial return. 
+
+Instead of eco-fluff, it hits with real-world reality: 
+> *"Running your AC at 18°C doesn't cool the room faster—it just burns money, grid power, and pushes heat into your neighborhood."*
 
 ---
 
-## 🚀 Getting Started
+## 🛠️ Local Development
 
-### 1. Configure the Environment
-To power the smart NLP analysis and AI Coach, you need an NVIDIA NIM API key. The frontend no longer requires users to paste their keys; everything is secured on the backend.
+Clone the repo and run the app locally:
 
-1. Get a free API key from [NVIDIA NIM build.nvidia.com](https://build.nvidia.com/).
-2. Create a `.env.local` file in the root of your project:
 ```bash
-NVIDIA_API_KEY="nvapi-your-key-here"
-```
-*(Note: If the API key is omitted, Karma automatically falls back to an upgraded deterministic local physics engine).*
-
-### 2. Install and Run
-Clone the repository and install dependencies:
-```bash
+# Install dependencies
 npm install
-```
 
-Run the development server:
-```bash
+# Run the Vitest test suite
+npm run test
+
+# Run the development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to experience Karma.
+Create a `.env.local` file with the following keys:
+```env
+GEMINI_API_KEY=your_google_gemini_key
+NEXTAUTH_URL=http://localhost:3000
+AUTH_SECRET=your_secure_random_string
+AUTH_GOOGLE_ID=your_google_oauth_client_id
+AUTH_GOOGLE_SECRET=your_google_oauth_secret
+```
 
 ---
 
-## 🧠 AI Integration Notes
-Karma features a sophisticated hybrid analysis pipeline:
-- **Net Delta Calculations:** When a user logs a substitution (e.g., swapping a cab for the metro), the AI explicitly calculates the `Actual Emissions - Baseline Emissions` yielding **avoided emissions** (negative carbon value) and positive karma points.
-- **Graceful Degradation:** If the NVIDIA API is unreachable or rate-limited, the `/api/analyze` endpoint gracefully falls back to a deterministic regex-based local parser that maintains app functionality seamlessly.
+*Built with Google Antigravity & Vibe Coding.*
