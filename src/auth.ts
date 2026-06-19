@@ -50,8 +50,8 @@ const getNextAuth = () => {
 };
 
 export const handlers = {
-  GET: (req: any) => getNextAuth().handlers.GET(req),
-  POST: (req: any) => getNextAuth().handlers.POST(req)
+  GET: (...args: any[]) => getNextAuth().handlers.GET(...args),
+  POST: (...args: any[]) => getNextAuth().handlers.POST(...args)
 };
 
 export const auth = (...args: any[]) => getNextAuth().auth(...args);
