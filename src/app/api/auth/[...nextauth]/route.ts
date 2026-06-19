@@ -2,18 +2,21 @@ import { handlers } from "@/auth";
 
 export const runtime = "edge";
 
-// Cloudflare Workers fetch implementation often omits a default User-Agent.
-// Google OAuth APIs (specifically the token exchange endpoint) actively block or return 400/403
-// for requests lacking a User-Agent, which causes NextAuth to throw a 500 OAuthCallbackError.
-// We intercept all NextAuth fetches here to ensure Google accepts them.
+// Safe Edge-compatible fetch interceptor to bypass Google User-Agent blocking on Cloudflare
 const originalFetch = globalThis.fetch;
-globalThis.fetch = async (url: any, options: any) => {
-  const customOptions = options || {};
-  customOptions.headers = {
-    ...customOptions.headers,
-    "User-Agent": "KarmaApp/1.0.0 (Cloudflare Pages)",
-  };
-  return originalFetch(url, customOptions);
+globalThis.fetch = async (input: any, init?: any) => {
+  if (input instanceof Request) {
+    // Edge runtime forbids passing 'headers' in init if input is a Request.
+    // We must safely clone the request and modify the headers.
+    const newReq = new Request(input, init);
+    newReq.headers.set("User-Agent", "KarmaApp/1.0.0 (Cloudflare Pages)");
+    return originalFetch(newReq);
+  } else {
+    const customInit = init || {};
+    customInit.headers = new Headers(customInit.headers);
+    customInit.headers.set("User-Agent", "KarmaApp/1.0.0 (Cloudflare Pages)");
+    return originalFetch(input, customInit);
+  }
 };
 
 export const { GET, POST } = handlers;
