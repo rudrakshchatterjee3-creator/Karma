@@ -18,16 +18,11 @@ let nextAuthInstance: any = null;
 
 const getNextAuth = () => {
   if (!nextAuthInstance) {
-    // Edge runtimes make process.env immutable, so we evaluate into local variables
-    // rather than trying to mutate process.env dynamically.
+    // Edge runtimes make process.env completely immutable. We CANNOT assign to it.
+    // Instead, we evaluate into local variables and pass directly into the provider.
     const googleId = process.env.AUTH_GOOGLE_ID || getGoogleId();
     const googleSecret = process.env.AUTH_GOOGLE_SECRET || getGoogleSecret();
     const authSecret = process.env.AUTH_SECRET || getSecret();
-
-    // NextAuth v5 requires NEXTAUTH_URL to be defined in edge environments sometimes
-    if (!process.env.AUTH_URL) {
-      (process as any).env.AUTH_URL = "https://karma-3jf.pages.dev";
-    }
 
     nextAuthInstance = NextAuth({
       providers: [
@@ -36,7 +31,7 @@ const getNextAuth = () => {
           clientSecret: googleSecret,
         }),
       ],
-      trustHost: true,
+      trustHost: true, // This completely removes the need for NEXTAUTH_URL or AUTH_URL
       secret: authSecret,
       session: { strategy: "jwt" },
       callbacks: {
