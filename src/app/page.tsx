@@ -1644,7 +1644,7 @@ function TrackView({
                 {estimate.sourceEngine === "gemini_3_1_flash_lite" ? (
                   <span className="rounded-full border border-sky-400/25 bg-sky-400/8 px-2 py-0.5 text-[10px] font-bold text-sky-400 uppercase tracking-wide flex items-center gap-1">
                     <Sparkles size={10} className="animate-ai-sparkle text-sky-400" />
-                    AI Estimated
+                    Powered by Gemini 3.1
                   </span>
                 ) : (
                   <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium text-white/45 uppercase tracking-wide">
@@ -1792,7 +1792,7 @@ function InsightsView({
                     coachReport.sourceEngine === "gemini_3_1_flash_lite" ? (
                       <span className="rounded-full border border-sky-400/25 bg-sky-400/8 px-2 py-0.5 text-[9px] font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1">
                         <Sparkles size={10} className="animate-ai-sparkle text-sky-400" />
-                        AI Estimated
+                        Powered by Gemini 3.1
                       </span>
                     ) : (
                       <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-medium text-white/45 uppercase tracking-wider">
