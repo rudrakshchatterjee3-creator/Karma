@@ -198,7 +198,19 @@ export async function POST(request: Request) {
             contents: [{ parts: [{ text: actionText }] }],
             generationConfig: {
               temperature: 0.1,
-              responseMimeType: "application/json"
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  carbon: { type: "NUMBER" },
+                  points: { type: "INTEGER" },
+                  category: { type: "STRING", enum: ["transport", "energy", "food", "shopping", "waste"] },
+                  note: { type: "STRING" },
+                  confidence: { type: "STRING", enum: ["high", "medium", "low"] },
+                  assumptions: { type: "ARRAY", items: { type: "STRING" } }
+                },
+                required: ["carbon", "points", "category", "note", "confidence", "assumptions"]
+              }
             }
           }),
         });

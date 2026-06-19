@@ -84,7 +84,32 @@ Task: Create a personalized weekly report and suggest 3 custom actions. Return J
             contents: [{ parts: [{ text: userPrompt }] }],
             generationConfig: {
               temperature: 0.2,
-              responseMimeType: "application/json"
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  headline: { type: "STRING" },
+                  summary: { type: "STRING" },
+                  actions: {
+                    type: "ARRAY",
+                    items: {
+                      type: "OBJECT",
+                      properties: {
+                        id: { type: "STRING" },
+                        category: { type: "STRING", enum: ["transport", "energy", "food", "shopping", "waste"] },
+                        title: { type: "STRING" },
+                        why: { type: "STRING" },
+                        step: { type: "STRING" },
+                        effort: { type: "STRING", enum: ["low", "medium", "high"] },
+                        carbon: { type: "NUMBER" },
+                        points: { type: "INTEGER" }
+                      },
+                      required: ["id", "category", "title", "why", "step", "effort", "carbon", "points"]
+                    }
+                  }
+                },
+                required: ["headline", "summary", "actions"]
+              }
             }
           }),
         });
