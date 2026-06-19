@@ -444,7 +444,7 @@ export default function KarmaApp() {
   }
 
   // ── LANDING PAGE ───────────────────────────────────────────
-  if (!state.onboarded && state.showLanding) {
+  if (state.showLanding) {
     return (
       <main className="min-h-screen overflow-hidden bg-background text-foreground">
         <div className={`app-shell ${isLightMode ? "theme-light" : ""}`}>
