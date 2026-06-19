@@ -23,6 +23,19 @@ const nextAuthInstance = NextAuth({
     Google({
       clientId: googleId,
       clientSecret: googleSecret,
+      // 1. Bypass OpenID discovery entirely. Cloudflare PoPs in certain regions (like India) 
+      // get blocked when trying to fetch the .well-known configuration, causing an immediate 500.
+      authorization: {
+        url: "https://accounts.google.com/o/oauth2/v2/auth",
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        }
+      },
+      token: "https://oauth2.googleapis.com/token",
+      userinfo: "https://openidconnect.googleapis.com/v1/userinfo",
+      issuer: "https://accounts.google.com",
     }),
   ],
   trustHost: true,
