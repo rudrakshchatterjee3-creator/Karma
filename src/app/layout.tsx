@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 };
 
 import { Providers } from "./providers";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -34,10 +35,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} h-[100dvh] antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+      <body className="min-h-[100dvh] flex flex-col">
+        <Providers>
+          {children}
+          <Toaster position="bottom-center" theme="dark" />
+        </Providers>
       </body>
     </html>
   );

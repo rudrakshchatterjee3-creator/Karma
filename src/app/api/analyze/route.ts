@@ -165,14 +165,24 @@ function parseJSONBlock(text: string) {
   }
 }
 
+import { z } from 'zod';
+
+const analyzeRequestSchema = z.object({
+  actionText: z.string().min(1, "Action text cannot be empty").max(1000, "Action text is too long"),
+  category: z.string().optional(),
+});
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { actionText, category: hintCategory } = body as { actionText?: string; category?: string };
-
-    if (!actionText || typeof actionText !== 'string') {
-      return NextResponse.json({ error: 'actionText is required' }, { status: 400 });
+    
+    // Strict Zod validation
+    const result = analyzeRequestSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json({ error: "Invalid input", details: result.error.format() }, { status: 400 });
     }
+    
+    const { actionText, category: hintCategory } = result.data;
 
     // 1. Try server-side NVIDIA NIM query if key exists
     const apiKey = process.env.NVIDIA_API_KEY;

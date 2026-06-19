@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight, Sun, Moon, LogOut,
@@ -394,6 +395,7 @@ export default function KarmaApp() {
       return { ...current, logs, actions };
     });
     setTab("today");
+    toast.success("Action logged successfully!");
   }
 
   function setActionStatus(id: string, status: Action["status"]) {
@@ -446,7 +448,7 @@ export default function KarmaApp() {
   // ── LANDING PAGE ───────────────────────────────────────────
   if (state.showLanding) {
     return (
-      <main className="min-h-screen overflow-hidden bg-background text-foreground">
+      <main className="min-h-[100dvh] overflow-hidden bg-background text-foreground">
         <div className={`app-shell ${isLightMode ? "theme-light" : ""}`}>
           <LandingPage
             onStart={() => setState((s) => ({ ...s, showLanding: false }))}
@@ -464,10 +466,10 @@ export default function KarmaApp() {
     const StoryIcon = (LucideIcons[story.iconName as keyof typeof LucideIcons] || LucideIcons.Sparkles) as React.ElementType;
 
     return (
-      <main className="min-h-screen overflow-hidden bg-background text-foreground relative">
+      <main className="min-h-[100dvh] overflow-hidden bg-background text-foreground relative">
         <div className={`app-shell ${isLightMode ? "theme-light" : ""}`}>
         <ThemeToggle isLightMode={isLightMode} toggleTheme={toggleTheme} />
-        <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8 relative">
+        <div className="mx-auto flex min-h-[100dvh] w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8 relative">
           <Header compact profile={state.profile} onLogoClick={() => setState((s) => ({ ...s, showLanding: true }))} />
           
           <section className="flex flex-1 flex-col items-center justify-center py-12">
@@ -615,10 +617,10 @@ export default function KarmaApp() {
 
   // ── MAIN APP ───────────────────────────────────────────────
   return (
-    <main className="min-h-screen bg-background text-foreground relative">
+    <main className="min-h-[100dvh] bg-background text-foreground relative">
       <div className={`app-shell ${isLightMode ? "theme-light" : ""}`}>
       <ThemeToggle isLightMode={isLightMode} toggleTheme={toggleTheme} />
-      <div className="mx-auto grid min-h-screen w-full max-w-7xl grid-rows-[auto_1fr_auto] px-4 py-5 sm:px-6 lg:grid-cols-[230px_1fr] lg:grid-rows-[auto_1fr] lg:gap-6 lg:px-8 relative">
+      <div className="mx-auto grid min-h-[100dvh] w-full max-w-7xl grid-rows-[auto_1fr_auto] px-4 py-5 sm:px-6 lg:grid-cols-[230px_1fr] lg:grid-rows-[auto_1fr] lg:gap-6 lg:px-8 relative">
         <aside className="hidden lg:block">
           <div className="sticky top-5 space-y-5">
             <Header compact={false} profile={state.profile} onLogoClick={() => setState((s) => ({ ...s, showLanding: true }))} />
@@ -752,7 +754,7 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
   ];
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden">
+    <div className="relative min-h-[100dvh] flex flex-col overflow-hidden">
       {/* Header */}
       <ThemeToggle isLightMode={isLightMode} toggleTheme={toggleTheme} />
       <div className="flex items-center justify-between px-6 py-6 sm:px-10 z-50 relative">
@@ -1516,6 +1518,7 @@ function TrackView({
           setSelectedCategory(data.category as Category);
         }
       } catch {
+        toast.error("AI estimation failed. Please try again.");
         setEstimate({ status: "error" });
       }
     }, 600);
