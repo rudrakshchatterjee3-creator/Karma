@@ -23,12 +23,15 @@ export const metadata: Metadata = {
   description:
     "A storytelling-based carbon emissions tracker that helps people understand, track, and reduce their footprint through practical daily actions.",
   manifest: "/manifest.json",
-  themeColor: "#0B0F14",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Karma"
   }
+};
+
+export const viewport = {
+  themeColor: "#0B0F14",
 };
 
 import { Providers } from "./providers";
