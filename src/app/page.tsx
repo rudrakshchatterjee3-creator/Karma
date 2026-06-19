@@ -737,60 +737,36 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
   const [startTime] = useState(() => Date.now());
 
   useEffect(() => {
-    const perSecond = worldCo2TonnesPerYear / (365 * 24 * 60 * 60);
+    const perSecond = 41600000000 / (365 * 24 * 60 * 60); // approx global emissions
     const timer = setInterval(() => {
       setGlobalTonnes(((Date.now() - startTime) / 1000) * perSecond);
     }, 1000);
     return () => clearInterval(timer);
   }, [startTime]);
 
-  const features = [
-    {
-      icon: TrendingUp,
-      accent: "text-sage",
-      glow: "drop-shadow-[0_0_12px_rgba(156,175,136,0.5)]",
-      title: "Find your hidden waste",
-      desc: "Karma diagnoses where your money, energy, and carbon are silently leaking — and ranks them by impact.",
-    },
-    {
-      icon: Zap,
-      accent: "text-amber-300",
-      glow: "drop-shadow-[0_0_12px_rgba(246,200,95,0.5)]",
-      title: "One action at a time",
-      desc: "No guilt, no overwhelming lists. One practical recommendation per week, matched to your lifestyle and motivation.",
-    },
-    {
-      icon: ShieldCheck,
-      accent: "text-sky-300",
-      glow: "drop-shadow-[0_0_12px_rgba(96,165,250,0.5)]",
-      title: "Personalized to India",
-      desc: "Built around Indian electricity bills, commute modes, food patterns, and real CO2 data from IEA 2024.",
-    },
-  ];
-
   const stats = [
     { value: "41.6 Gt", label: "Global CO2 emitted per year" },
     { value: "2.8 Gt", label: "India's annual CO2 emissions" },
-    { value: "₹1,500+", label: "Monthly leak in an average household" },
-    { value: "<1 min", label: "Time to log your daily choices" },
+    { value: "₹1,500+", label: "Monthly leak in average household" },
+    { value: "<1 min", label: "Time to log daily choices" },
   ];
 
   return (
-    <div className="relative min-h-screen flex flex-col">
+    <div className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Header */}
       <ThemeToggle isLightMode={isLightMode} toggleTheme={toggleTheme} />
-      <div className="flex items-center justify-between px-6 py-5 sm:px-10 z-10 relative">
+      <div className="flex items-center justify-between px-6 py-6 sm:px-10 z-50 relative">
         <div className="flex items-center gap-3">
           <LogoMark />
-          <span className="text-lg font-semibold tracking-normal text-foreground">Karma</span>
+          <span className="text-xl font-semibold tracking-normal text-foreground">Karma</span>
         </div>
-        <div className="flex items-center gap-3 mr-12 sm:mr-16">
+        <div className="flex items-center gap-4 mr-12 sm:mr-16">
           {session ? (
-            <button className="primary-button" onClick={onStart}>
+            <button className="primary-button py-2 px-5" onClick={onStart}>
               Dashboard <ArrowRight size={16} />
             </button>
           ) : (
-            <button className="primary-button" onClick={() => signIn("google")}>
+            <button className="primary-button py-2 px-5" onClick={() => signIn("google")}>
               Sign In <ArrowRight size={16} />
             </button>
           )}
@@ -798,69 +774,72 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
       </div>
 
       {/* Hero */}
-      <section className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center sm:px-10 sm:py-24 relative z-10">
+      <section className="flex flex-col items-center justify-center px-6 pt-20 pb-24 text-center sm:px-10 relative z-10">
         
-        {/* Giant background orbs for density and glassmorphism */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-sage/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" />
-        <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-sky-400/5 rounded-full blur-[100px] pointer-events-none -z-10" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-amber-400/5 rounded-full blur-[90px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '7s' }} />
+        {/* Dynamic Glowing Background Orbs */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[1000px] max-h-[1000px] bg-sage/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '10s' }} />
+        <div className="absolute top-1/4 left-1/4 w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] bg-sky-400/5 rounded-full blur-[100px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute bottom-1/4 right-1/4 w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] bg-amber-400/5 rounded-full blur-[90px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '12s' }} />
         
-        {/* Decorative Floating Elements */}
+        {/* Mockup Floating Cards (Insight Widgets) */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: [0, -15, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute hidden lg:flex top-1/4 right-[10%] flex-col gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md shadow-2xl -rotate-6"
+          initial={{ opacity: 0, y: 30, rotate: -6 }} animate={{ opacity: 1, y: [0, -15, 0], rotate: -6 }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute hidden lg:flex top-1/4 left-[10%] flex-col gap-3 rounded-2xl border border-[var(--foreground)]/10 bg-background/60 p-4 backdrop-blur-xl shadow-2xl shadow-sage/5 w-64"
         >
-          <div className="h-2 w-12 rounded-full bg-sage/40" />
-          <div className="h-2 w-24 rounded-full bg-white/20" />
-          <div className="h-2 w-16 rounded-full bg-white/10" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap size={14} className="text-amber-400" />
+              <span className="text-xs font-semibold text-[var(--foreground)]/70 uppercase">AC Leak</span>
+            </div>
+            <span className="text-xs font-bold text-red-400">+₹420</span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-[var(--foreground)]/5 overflow-hidden">
+            <div className="h-full w-3/4 rounded-full bg-red-400/50" />
+          </div>
+          <p className="text-left text-[10px] text-[var(--foreground)]/40 mt-1">Running at 22°C overnight</p>
         </motion.div>
 
         <motion.div 
-          initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: [0, 20, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute hidden lg:flex bottom-1/4 left-[10%] flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md shadow-2xl rotate-3"
+          initial={{ opacity: 0, y: -20, rotate: 4 }} animate={{ opacity: 1, y: [0, 20, 0], rotate: 4 }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute hidden lg:flex bottom-1/3 right-[8%] flex-col gap-3 rounded-2xl border border-[var(--foreground)]/10 bg-background/60 p-4 backdrop-blur-xl shadow-2xl shadow-sky-400/5 w-60"
         >
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-sky-400/20 flex items-center justify-center">
-              <div className="h-3 w-3 rounded-full bg-sky-400" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={14} className="text-sky-400" />
+              <span className="text-xs font-semibold text-[var(--foreground)]/70 uppercase">Commute</span>
             </div>
-            <div className="space-y-2">
-              <div className="h-2 w-20 rounded-full bg-white/30" />
-              <div className="h-2 w-12 rounded-full bg-white/10" />
-            </div>
+            <span className="text-xs font-bold text-emerald-400">-12kg</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="px-2 py-1 rounded-md bg-[var(--foreground)]/5 text-[10px] font-medium text-[var(--foreground)]/60">Cab</div>
+            <ArrowRight size={10} className="text-[var(--foreground)]/30" />
+            <div className="px-2 py-1 rounded-md bg-emerald-400/10 text-[10px] font-medium text-emerald-500">Metro</div>
           </div>
         </motion.div>
 
-        {/* Badge */}
+        {/* Live Counter (Now integrated smoothly) */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8 inline-flex items-center gap-2 rounded-full border border-sage/30 bg-sage/10 px-4 py-2 text-xs font-medium text-sage backdrop-blur-md"
+          initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6 }}
+          className="mb-10 inline-flex flex-col items-center justify-center"
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
-          Live emissions ticking now
-        </motion.div>
-
-        {/* Live counter */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mb-8 rounded-3xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 px-10 py-6 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
-        >
-          <p className="text-xs uppercase tracking-[0.2em] text-[var(--foreground)]/50 mb-2 font-semibold">CO2 emitted since you opened this page</p>
-          <p className="font-outfit text-5xl sm:text-6xl font-medium tracking-tight text-foreground">
-            {Math.round(globalTonnes).toLocaleString("en-US")}
-            <span className="ml-3 text-2xl text-[var(--foreground)]/50">tonnes</span>
-          </p>
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--foreground)]/60 backdrop-blur-md">
+            <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
+            Global Emissions Since Open
+          </div>
+          <div className="flex items-baseline gap-2 font-outfit">
+            <span className="text-6xl sm:text-8xl font-bold tracking-tighter text-foreground tabular-nums drop-shadow-sm">
+              {Math.floor(globalTonnes).toLocaleString("en-US")}
+            </span>
+            <span className="text-2xl sm:text-3xl font-medium text-[var(--foreground)]/40 tabular-nums">
+              .{Math.floor((globalTonnes % 1) * 10)} t
+            </span>
+          </div>
         </motion.div>
 
         {/* Headline */}
         <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="max-w-4xl text-5xl font-bold leading-[1.1] tracking-tight sm:text-7xl text-balance text-foreground"
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
+          className="max-w-4xl text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl text-balance text-foreground drop-shadow-sm"
         >
           Your lifestyle,{" "}
           <span 
@@ -873,93 +852,167 @@ function LandingPage({ onStart, toggleTheme, isLightMode }: { onStart: () => voi
 
         {/* Subhead */}
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-8 max-w-2xl text-xl leading-relaxed text-[var(--foreground)]/70 font-medium"
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
+          className="mt-8 max-w-2xl text-xl leading-relaxed text-[var(--foreground)]/60 font-medium"
         >
-          Karma turns your daily choices into a weekly action plan that saves money, reduces waste, and lowers your carbon footprint — without the guilt.
+          Karma diagnoses your daily choices into a weekly action plan that saves money, reduces waste, and lowers your carbon footprint — <span className="text-foreground">without the guilt.</span>
         </motion.p>
 
         {/* CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
           className="mt-12 flex flex-col items-center justify-center gap-4"
         >
           <button
-            className="primary-button text-base px-10 py-4 text-lg font-semibold shadow-lg shadow-sage/20 transition-transform hover:scale-105 active:scale-95"
+            className="primary-button text-base px-10 py-4 text-lg font-semibold shadow-[0_0_40px_rgba(156,175,136,0.3)] transition-all hover:scale-105 active:scale-95"
             onClick={session ? onStart : () => signIn("google")}
           >
-            {session ? `Continue as ${session.user?.name?.split(' ')[0]}` : "Sign in with Google"} <ArrowRight size={20} />
+            {session ? "Open Dashboard" : "Sign in with Google"} <ArrowRight size={20} />
           </button>
-          <span className="text-sm font-medium text-[var(--foreground)]/50 tracking-wide uppercase">Secure Google Authentication</span>
+          <span className="text-xs font-semibold text-[var(--foreground)]/40 tracking-widest uppercase">Secure 1-Click Login</span>
         </motion.div>
       </section>
 
-      {/* Stats strip */}
+      {/* Stats Strip */}
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.5 }}
-        className="border-y border-[var(--foreground)]/10 bg-[var(--foreground)]/5 px-6 py-8 sm:px-10 backdrop-blur-sm"
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }}
+        className="border-y border-[var(--foreground)]/10 bg-[var(--foreground)]/[0.02] px-6 py-10 sm:px-10 backdrop-blur-sm relative z-10"
       >
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 sm:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="font-outfit text-4xl font-medium tracking-tight text-foreground">{stat.value}</p>
-              <p className="mt-2 text-xs leading-5 text-[var(--foreground)]/60 font-medium uppercase tracking-wider">{stat.label}</p>
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 md:grid-cols-4 divide-x divide-[var(--foreground)]/5">
+          {stats.map((stat, i) => (
+            <div key={stat.label} className={`text-center ${i === 0 || i === 2 ? "border-none" : ""} ${i === 1 || i === 3 ? "border-l border-[var(--foreground)]/5" : ""} md:border-l`} style={{ borderLeft: i === 0 ? 'none' : '' }}>
+              <p className="font-outfit text-3xl sm:text-4xl font-bold tracking-tight text-foreground">{stat.value}</p>
+              <p className="mt-2 text-[10px] sm:text-xs leading-5 text-[var(--foreground)]/50 font-semibold uppercase tracking-widest mx-auto max-w-[150px]">{stat.label}</p>
             </div>
           ))}
         </div>
       </motion.section>
 
-      {/* Feature cards */}
-      <section className="px-6 py-16 sm:px-10 sm:py-20">
-        <div className="mx-auto max-w-5xl">
-          <p className="mb-10 text-center text-xs font-medium uppercase tracking-[0.22em] text-sage">
-            Why Karma is different
+      {/* Bento Box Features */}
+      <section className="px-6 py-24 sm:px-10 sm:py-32 relative z-10">
+        <div className="mx-auto max-w-6xl">
+          <p className="mb-12 text-center text-xs font-semibold uppercase tracking-[0.22em] text-sage">
+            The Intelligence Engine
           </p>
-          <div className="grid gap-5 sm:grid-cols-3">
-            {features.map((feat, i) => {
-              const Icon = feat.icon;
-              return (
-                <motion.div
-                  key={feat.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 + i * 0.1 }}
-                  className="panel p-6 group hover:-translate-y-1 transition-transform duration-300 border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-xl shadow-black/5"
-                >
-                  <div className={`mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--foreground)]/5 ${feat.accent} ${feat.glow}`}>
-                    <Icon size={22} />
+          
+          <div className="grid gap-6 md:grid-cols-3 md:grid-rows-2">
+            
+            {/* Bento 1: Span 2 Cols */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+              className="md:col-span-2 md:row-span-1 rounded-[2rem] border border-[var(--foreground)]/10 bg-gradient-to-br from-[var(--foreground)]/5 to-[var(--foreground)]/[0.01] p-8 sm:p-10 backdrop-blur-xl shadow-2xl relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 p-10 opacity-20 transition-opacity group-hover:opacity-40">
+                <TrendingUp size={120} className="text-sage" />
+              </div>
+              <div className="relative z-10 flex flex-col h-full justify-between">
+                <div>
+                  <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-full bg-sage/20 text-sage drop-shadow-[0_0_12px_rgba(156,175,136,0.6)]">
+                    <TrendingUp size={24} />
                   </div>
-                  <h3 className="mb-2 font-semibold text-foreground text-lg">{feat.title}</h3>
-                  <p className="text-sm leading-relaxed text-[var(--foreground)]/60">{feat.desc}</p>
-                </motion.div>
-              );
-            })}
+                  <h3 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">Find your hidden waste</h3>
+                  <p className="text-[var(--foreground)]/60 text-base max-w-sm leading-relaxed">
+                    Karma diagnoses where your money, energy, and carbon are silently leaking — and ranks them by impact.
+                  </p>
+                </div>
+                
+                {/* Mock Chart UI */}
+                <div className="mt-10 rounded-xl border border-[var(--foreground)]/10 bg-background/50 p-5 backdrop-blur-md max-w-md w-full shadow-lg">
+                  <div className="flex justify-between items-end mb-4">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-[var(--foreground)]/50 font-bold mb-1">Energy Leak</p>
+                      <p className="font-outfit text-2xl font-bold text-foreground">₹1,240 <span className="text-sm font-medium text-red-400 ml-1">↑ 12%</span></p>
+                    </div>
+                    <div className="flex gap-1">
+                      {[30, 45, 25, 60, 80, 50, 95].map((h, i) => (
+                        <div key={i} className="w-3 rounded-t-sm bg-sage/40 transition-all hover:bg-sage" style={{ height: `${h}px` }} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Bento 2: Span 1 Col */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}
+              className="md:col-span-1 md:row-span-1 rounded-[2rem] border border-[var(--foreground)]/10 bg-gradient-to-bl from-[var(--foreground)]/5 to-[var(--foreground)]/[0.01] p-8 sm:p-10 backdrop-blur-xl shadow-2xl relative overflow-hidden group"
+            >
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-full bg-amber-400/20 text-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]">
+                  <Zap size={24} />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-3">One action at a time</h3>
+                <p className="text-[var(--foreground)]/60 text-sm leading-relaxed mb-8">
+                  No guilt, no overwhelming lists. One practical recommendation per week.
+                </p>
+                
+                {/* Mock Checklist UI */}
+                <div className="mt-auto space-y-3">
+                  <div className="flex items-center gap-3 rounded-lg border border-sage/30 bg-sage/10 p-3 shadow-inner">
+                    <div className="h-5 w-5 rounded-full bg-sage flex items-center justify-center text-background">
+                      <Check size={12} strokeWidth={4} />
+                    </div>
+                    <span className="text-xs font-semibold text-foreground">Switch AC to 26°C</span>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-3 opacity-50">
+                    <div className="h-5 w-5 rounded-full border-2 border-[var(--foreground)]/20" />
+                    <span className="text-xs font-medium text-foreground line-through">Carpool to work</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Bento 3: Span 1 Col */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }}
+              className="md:col-span-1 md:row-span-1 rounded-[2rem] border border-[var(--foreground)]/10 bg-gradient-to-tr from-[var(--foreground)]/5 to-[var(--foreground)]/[0.01] p-8 sm:p-10 backdrop-blur-xl shadow-2xl relative overflow-hidden group"
+            >
+              <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-sky-400/10 rounded-full blur-3xl group-hover:bg-sky-400/20 transition-colors" />
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-full bg-sky-400/20 text-sky-400 drop-shadow-[0_0_12px_rgba(56,189,248,0.6)]">
+                  <ShieldCheck size={24} />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-3">Personalized to India</h3>
+                <p className="text-[var(--foreground)]/60 text-sm leading-relaxed">
+                  Built around Indian electricity bills, commute modes, and real CO2 data from IEA 2024.
+                </p>
+                <div className="mt-8 flex items-center gap-2">
+                  <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-400 bg-sky-400/10 rounded-full border border-sky-400/20">₹ Rupee Context</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Bento 4: Span 2 Cols */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 }}
+              className="md:col-span-2 md:row-span-1 rounded-[2rem] border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-8 sm:p-10 backdrop-blur-xl shadow-2xl relative overflow-hidden flex flex-col sm:flex-row items-center gap-8 group"
+            >
+              <div className="flex-1">
+                <h2 className="text-3xl font-bold tracking-tight text-foreground mb-4">Stop guessing. Start knowing.</h2>
+                <p className="text-base leading-relaxed text-[var(--foreground)]/60 mb-8">
+                  Takes 3 minutes to set up your baseline footprint and unlock personalized AI insights. Secure Google Login included.
+                </p>
+                <button className="primary-button py-3 px-8 text-base font-semibold w-full sm:w-auto justify-center shadow-lg" onClick={session ? onStart : () => signIn("google")}>
+                  {session ? "Enter Workspace" : "Get Started Now"} <ArrowRight size={18} />
+                </button>
+              </div>
+              <div className="flex-1 w-full relative h-48 sm:h-full min-h-[200px] rounded-xl border border-[var(--foreground)]/10 bg-background/50 overflow-hidden shadow-inner flex items-center justify-center group-hover:border-sage/30 transition-colors">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(156,175,136,0.1)_0,transparent_70%)]" />
+                <div className="text-center relative z-10">
+                  <LogoMark />
+                  <p className="mt-3 text-sm font-semibold tracking-widest uppercase text-foreground">Karma Intelligence</p>
+                </div>
+              </div>
+            </motion.div>
+            
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="px-6 pb-20 text-center sm:px-10 relative z-10">
-        <div className="mx-auto max-w-xl rounded-3xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-10 backdrop-blur-2xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--foreground)]/50 relative z-10">Ready?</p>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground relative z-10">Your hidden waste is waiting to be found.</h2>
-          <p className="mt-4 text-base leading-relaxed text-[var(--foreground)]/60 relative z-10">Takes 3 minutes to set up. Secure Google Login.</p>
-          <button className="primary-button mt-8 w-full justify-center py-4 text-lg font-medium relative z-10" onClick={session ? onStart : () => signIn("google")}>
-            {session ? "Open Dashboard" : "Sign in with Google"} <ArrowRight size={18} />
-          </button>
-        </div>
-      </section>
-
       {/* Footer */}
-      <footer className="border-t border-white/8 px-6 py-6 text-center">
-        <p className="text-xs text-white/28">
+      <footer className="border-t border-[var(--foreground)]/5 px-6 py-8 text-center bg-background z-10 relative">
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[var(--foreground)]/30">
           Karma · Carbon data from IEA & Global Carbon Budget 2024 · Built for PromptWars
         </p>
       </footer>
