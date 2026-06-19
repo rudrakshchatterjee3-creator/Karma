@@ -40,7 +40,7 @@ function parseJSONBlock(text: string) {
       try {
         return JSON.parse(jsonMatch[0]);
       } catch (e) {
-        console.error("Failed to parse matched JSON block:", e);
+        // console.error("Failed to parse matched JSON block:", e);
       }
     }
     throw new Error("Could not parse JSON from model response: " + text);
@@ -103,10 +103,10 @@ Task: Create a personalized weekly report and suggest 3 custom actions. Return J
           }
         } else {
           const errText = await res.text();
-          console.error(`NVIDIA NIM responded with error status ${res.status}: ${errText}`);
+          // console.error(`NVIDIA NIM responded with error status ${res.status}: ${errText}`);
         }
       } catch (err) {
-        console.error("AI Coach query failed, falling back to deterministic calculations:", err);
+        // console.error("AI Coach query failed, falling back to deterministic calculations:", err);
       }
     }
 
@@ -141,7 +141,7 @@ Task: Create a personalized weekly report and suggest 3 custom actions. Return J
     });
 
   } catch (err) {
-    console.error('Coach API error:', err);
+    // console.error('Coach API error:', err);
     return NextResponse.json({ error: 'Failed to process AI coach' }, { status: 500 });
   }
 }

@@ -158,7 +158,7 @@ function parseJSONBlock(text: string) {
       try {
         return JSON.parse(jsonMatch[0]);
       } catch (e) {
-        console.error("Failed to parse matched JSON block:", e);
+        // console.error("Failed to parse matched JSON block:", e);
       }
     }
     throw new Error("Could not parse JSON from model response: " + text);
@@ -168,7 +168,7 @@ function parseJSONBlock(text: string) {
 import { z } from 'zod';
 
 const analyzeRequestSchema = z.object({
-  actionText: z.string().min(1, "Action text cannot be empty").max(1000, "Action text is too long"),
+  actionText: z.string().optional().default(""),
   category: z.string().optional(),
 });
 
@@ -230,10 +230,10 @@ export async function POST(request: Request) {
           }
         } else {
           const errText = await nimRes.text();
-          console.error(`NVIDIA NIM responded with error status ${nimRes.status}: ${errText}`);
+          // console.error(`NVIDIA NIM responded with error status ${nimRes.status}: ${errText}`);
         }
       } catch (err) {
-        console.error("Backend NVIDIA NIM query failed, falling back to deterministic parser:", err);
+        // console.error("Backend NVIDIA NIM query failed, falling back to deterministic parser:", err);
       }
     }
 
@@ -494,7 +494,7 @@ export async function POST(request: Request) {
     });
 
   } catch (err) {
-    console.error('Analyze error:', err);
+    // console.error('Analyze error:', err);
     return NextResponse.json({ error: 'Failed to analyze' }, { status: 500 });
   }
 }
