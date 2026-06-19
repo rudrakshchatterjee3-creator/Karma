@@ -4,16 +4,14 @@ if (typeof process === "undefined") {
   (process as unknown as { env: Record<string, string> }).env = {};
 }
 
-const googleId = "197228562186-kpnmh7pcm1lh81" + "vbtijc5ma0fp24i4to.apps.googleusercontent.com";
-const googleSecret = "GOCSPX-" + "PfKHqi--sxUm_Yqa26xu8wjnzbZ0";
-const fallbackSecret = "fallback_secret_karma_2026_super_secure_string_length_32_bytes_min";
+// Ensure we pull from environment variables for security compliance
+const googleId = process.env.AUTH_GOOGLE_ID as string;
+const googleSecret = process.env.AUTH_GOOGLE_SECRET as string;
+const nextAuthSecret = process.env.AUTH_SECRET as string;
 
-// Unconditionally override environment to protect NextAuth internals
-process.env.AUTH_GOOGLE_ID = googleId;
-process.env.AUTH_GOOGLE_SECRET = googleSecret;
-process.env.AUTH_SECRET = fallbackSecret;
-process.env.AUTH_URL = "https://karma-3jf.pages.dev";
-process.env.NEXTAUTH_URL = "https://karma-3jf.pages.dev";
+// Unconditionally override environment to protect NextAuth internals if running locally without full env
+if (!process.env.AUTH_URL) process.env.AUTH_URL = "https://karma-3jf.pages.dev";
+if (!process.env.NEXTAUTH_URL) process.env.NEXTAUTH_URL = "https://karma-3jf.pages.dev";
 
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
@@ -25,7 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: googleSecret,
     }),
   ],
-  secret: fallbackSecret,
+  secret: nextAuthSecret,
   trustHost: true,
   session: {
     strategy: "jwt",
