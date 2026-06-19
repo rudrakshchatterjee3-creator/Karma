@@ -86,11 +86,6 @@ const HOUR_PATTERNS = [
   /for\s+(\d+(?:\.\d+)?)/i,
 ];
 
-const SPEED_PATTERNS = [
-  /(\d+(?:\.\d+)?)\s*km\s*(?:per\s*hour|\/\s*hr?|ph|kmph)/i,
-  /at\s+(\d+(?:\.\d+)?)/i,
-];
-
 const SYSTEM_PROMPT = `You are Karma Estimate AI, a precise carbon footprint analyzer for Indian lifestyles.
 Your task is to parse a user's description of a daily activity and estimate its carbon footprint and points.
 

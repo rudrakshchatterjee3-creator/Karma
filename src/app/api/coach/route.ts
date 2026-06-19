@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { type Profile, type LogEntry, createActions, totalsByCategory } from '@/utils/karmaLogic';
+import { type Profile, type LogEntry, createActions } from '@/utils/karmaLogic';
 
 export const runtime = 'edge';
 

@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -9,12 +10,9 @@ import {
   BarChart3,
   Bolt,
   Check,
-  ChevronRight,
   Star,
   Clock3,
-  Globe2,
   Home,
-  MapPin,
   Leaf,
   Plus,
   RotateCcw,
@@ -24,7 +22,6 @@ import {
   Share2,
   Sparkles,
   Target,
-  ThermometerSun,
   Train,
   Utensils,
   UserRound,
@@ -44,7 +41,7 @@ import {
   type Diet,
   type LogEntry,
   type Action,
-  type StoryCard,
+
   defaultProfile,
   calculateMonthlyLeak,
   getStoryCards,
@@ -59,12 +56,7 @@ import {
 
 type Tab = "today" | "track" | "insights" | "plan" | "recap" | "profile";
 
-type ManualLogDraft = {
-  label: string;
-  carbon: number;
-  points: number;
-  note: string;
-};
+
 
 type AppState = {
   onboarded: boolean;
@@ -1148,7 +1140,7 @@ function SetupOverlay({
                   <motion.div key="step-0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
                     {session?.user ? (
                       <div className="mb-2 flex items-center gap-4 rounded-2xl border border-sage/20 bg-sage/5 p-4">
-                        {session.user.image && <img src={session.user.image} alt="" className="h-10 w-10 rounded-full border border-sage/30" />}
+                        {session.user.image && <Image src={session.user.image} alt="User Avatar" width={40} height={40} className="h-10 w-10 rounded-full border border-sage/30" />}
                         <div>
                           <p className="font-medium text-white">{session.user.name}</p>
                           <p className="text-xs text-white/60">{session.user.email}</p>
@@ -1263,69 +1255,6 @@ function SetupOverlay({
   );
 }
 
-function OnboardingCard({
-  profile,
-  updateProfile,
-  finishOnboarding,
-}: {
-  profile: Profile;
-  updateProfile: (patch: Partial<Profile>) => void;
-  finishOnboarding: () => void;
-}) {
-  return (
-    <div className="panel space-y-5 p-5 sm:p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-white/45">Your carbon baseline</p>
-          <h2 className="text-2xl font-semibold">Build a realistic first footprint</h2>
-        </div>
-        <Sparkles className="text-sage" size={22} />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="City">
-          <input
-            className="input"
-            value={profile.city}
-            onChange={(e) => updateProfile({ city: e.target.value })}
-            placeholder="Your city"
-          />
-        </Field>
-        <Field label="Household">
-          <Stepper value={profile.household} min={1} max={8} onChange={(value) => updateProfile({ household: value })} />
-        </Field>
-        <Field label="Electricity bill">
-          <Range value={profile.bill} min={800} max={8000} step={100} onChange={(value) => updateProfile({ bill: value })} suffix={formatRupees(profile.bill)} />
-        </Field>
-        <Field label="AC hours/day">
-          <Range value={profile.acHours} min={0} max={12} step={1} onChange={(value) => updateProfile({ acHours: value })} suffix={`${profile.acHours} h`} />
-        </Field>
-        <Field label="Commute">
-          <select className="input" value={profile.commuteMode} onChange={(e) => updateProfile({ commuteMode: e.target.value as Profile["commuteMode"] })}>
-            {[["cab", "Cab / Ola / Uber"], ["car", "Own car"], ["auto", "Auto"], ["metro", "Metro / Train"], ["bike", "Bike"], ["walk", "Walk"]].map(([val, label]) => (
-              <option key={val} value={val}>{label}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Weekly commute">
-          <Range value={profile.commuteKm} min={0} max={180} step={5} onChange={(value) => updateProfile({ commuteKm: value })} suffix={`${profile.commuteKm} km`} />
-        </Field>
-        <Field label="Food delivery/week">
-          <Stepper value={profile.deliveries} min={0} max={14} onChange={(value) => updateProfile({ deliveries: value })} />
-        </Field>
-        <Field label="Diet pattern">
-          <select className="input" value={profile.diet} onChange={(e) => updateProfile({ diet: e.target.value as Diet })}>
-            <option value="veg">Vegetarian</option>
-            <option value="mixed">Mixed</option>
-            <option value="high-meat">High-meat</option>
-          </select>
-        </Field>
-      </div>
-      <button className="primary-button w-full justify-center" onClick={finishOnboarding}>
-        Generate my plan <ChevronRight size={18} />
-      </button>
-    </div>
-  );
-}
 
 function TodayView({
   profile,
@@ -1509,7 +1438,6 @@ function TrackView({
       setEstimate({ status: "idle" });
       return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEstimate({ status: "loading" });
     debounceRef.current = setTimeout(async () => {
       try {
@@ -2042,7 +1970,7 @@ function ProfileView({
       <div className="panel grid gap-4 p-5 sm:grid-cols-2">
         {session?.user ? (
           <div className="col-span-1 sm:col-span-2 mb-2 flex items-center gap-4 rounded-2xl border border-sage/20 bg-sage/5 p-4">
-            {session.user.image && <img src={session.user.image} alt="" className="h-10 w-10 rounded-full border border-sage/30" />}
+            {session.user.image && <Image src={session.user.image} alt="User Avatar" width={40} height={40} className="h-10 w-10 rounded-full border border-sage/30" />}
             <div>
               <p className="font-medium text-foreground">{session.user.name}</p>
               <p className="text-xs text-[var(--foreground)]/60">{session.user.email}</p>
@@ -2339,3 +2267,4 @@ function Range({ value, min, max, step, onChange, suffix }: { value: number; min
     </div>
   );
 }
+
