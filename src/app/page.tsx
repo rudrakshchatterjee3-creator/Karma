@@ -210,11 +210,10 @@ export default function KarmaApp() {
             setShowSetup(false);
           }
         })
-        .catch(console.error)
+        .catch(() => toast.error("Background sync failed"))
         .finally(() => setCloudSynced(true));
     } else if (status === "unauthenticated") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCloudSynced(true);
+      setTimeout(() => setCloudSynced(true), 0);
     }
   }, [session, hydrated, status, cloudSynced]);
 
@@ -231,7 +230,7 @@ export default function KarmaApp() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(state),
-        }).catch(console.error);
+        }).catch(() => toast.error("Background sync failed"));
       }
     }
   }, [hydrated, state, session, cloudSynced]);
@@ -288,8 +287,8 @@ export default function KarmaApp() {
           actions: actionsMapped,
           sourceEngine: data.sourceEngine,
         });
-      } catch (err) {
-        console.error("Failed to load AI Coach:", err);
+      } catch {
+        toast.error("Failed to load AI Coach");
       } finally {
         if (active) setCoachLoading(false);
       }
@@ -299,8 +298,7 @@ export default function KarmaApp() {
     return () => {
       active = false;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, state.logs, state.onboarded]);
+  }, [tab, state.logs, state.onboarded, state.actions, state.profile]);
 
   const renderedActions = useMemo(() => {
     if (coachReport) {
@@ -433,8 +431,8 @@ export default function KarmaApp() {
     
     try {
       await fetch("/api/sync", { method: "DELETE" });
-    } catch (e) {
-      console.error("Failed to delete KV data", e);
+    } catch {
+      toast.error("Failed to delete KV data");
     }
     
     window.localStorage.removeItem(storageKey);
@@ -504,8 +502,7 @@ export default function KarmaApp() {
                     className="story-panel overflow-hidden flex flex-col justify-center items-center text-center relative p-8 h-[400px] sm:h-[450px] theme-dark-panel"
                   >
                     <div className="absolute inset-0 bg-[#0a0e12]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={story.image} className="absolute inset-0 h-full w-full object-cover opacity-50" alt="Why Karma" />
+                      <Image src={story.image} className="absolute inset-0 h-full w-full object-cover opacity-50" alt="Why Karma" fill unoptimized />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e12] via-[#0a0e12]/80 to-transparent" />
                     </div>
                     <div className="relative z-10 flex flex-col items-center gap-6 mt-4">
@@ -525,12 +522,7 @@ export default function KarmaApp() {
                     className="story-panel overflow-hidden flex flex-col"
                   >
                     <div className="relative h-64 sm:h-[340px] w-full shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img 
-                        src={story.image} 
-                        alt={story.title} 
-                        className="absolute inset-0 h-full w-full object-cover" 
-                      />
+                      <Image src={story.image} alt={story.title} className="absolute inset-0 h-full w-full object-cover" fill unoptimized />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e12] via-[#0a0e12]/40 to-transparent" />
                       
                       <div className="absolute inset-x-6 bottom-6 flex items-end justify-between theme-dark-panel">
@@ -1489,11 +1481,10 @@ function TrackView({
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!label.trim() || label.trim().length < 6) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setEstimate({ status: "idle" });
+      setTimeout(() => setEstimate({ status: "idle" }), 0);
       return;
     }
-    setEstimate({ status: "loading" });
+    setTimeout(() => setEstimate({ status: "loading" }), 0);
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch("/api/analyze", {
@@ -1523,8 +1514,7 @@ function TrackView({
       }
     }, 600);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [label]);
+  }, [label, selectedCategory, setSelectedCategory]);
 
   function submitManualLog() {
     if (!label.trim()) return;

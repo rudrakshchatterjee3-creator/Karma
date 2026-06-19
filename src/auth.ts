@@ -1,11 +1,7 @@
 if (typeof process === "undefined") {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  globalThis.process = { env: {} };
+  (globalThis as unknown as { process: { env: Record<string, string> } }).process = { env: {} };
 } else if (!process.env) {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  process.env = {};
+  (process as unknown as { env: Record<string, string> }).env = {};
 }
 
 const googleId = "197228562186-kpnmh7pcm1lh81" + "vbtijc5ma0fp24i4to.apps.googleusercontent.com";

@@ -1,4 +1,3 @@
-/* eslint-disable */
 import * as fs from "fs";
 import * as path from "path";
 import { 
@@ -132,8 +131,8 @@ function runTests() {
       console.error(`❌ Failed: Light mode contrast ratio is too low (${ratio.toFixed(2)}:1).`);
       failed = true;
     }
-  } catch (err: any) {
-    console.error("❌ Failed to analyze globals.css:", err.message);
+  } catch (err: unknown) {
+    console.error("❌ Failed to analyze globals.css:", (err as Error).message);
     failed = true;
   }
 
