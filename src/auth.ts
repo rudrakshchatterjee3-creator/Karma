@@ -13,25 +13,6 @@ const getGoogleSecret = () => ["GOCSPX", "PfKHqi--sxUm_Yqa26xu8wjnzbZ0"].join("-
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
-const nextAuthResult = NextAuth({
-  providers: [
-    // We omit explicit clientId/clientSecret so Auth.js automatically reads process.env at request time
-    Google({}),
-  ],
-  trustHost: true,
-  session: { strategy: "jwt" },
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) token.id = user.id;
-      return token;
-    },
-    session({ session, token }) {
-      if (session.user) session.user.id = token.id as string;
-      return session;
-    },
-  },
-});
-
 // We wrap the exports to inject fallbacks into process.env ONLY if Cloudflare hasn't already bound them at request time.
 const injectFallbacks = () => {
   if (!process.env.AUTH_GOOGLE_ID) process.env.AUTH_GOOGLE_ID = getGoogleId();
@@ -41,25 +22,38 @@ const injectFallbacks = () => {
   if (!process.env.NEXTAUTH_URL) process.env.NEXTAUTH_URL = "https://karma-3jf.pages.dev";
 };
 
+let nextAuthInstance: any = null;
+
+const getNextAuth = () => {
+  if (!nextAuthInstance) {
+    injectFallbacks(); // Guarantee process.env is hydrated BEFORE NextAuth initializes
+    nextAuthInstance = NextAuth({
+      providers: [
+        // We omit explicit clientId/clientSecret so Auth.js automatically reads process.env at runtime
+        Google({}),
+      ],
+      trustHost: true,
+      session: { strategy: "jwt" },
+      callbacks: {
+        jwt({ token, user }) {
+          if (user) token.id = user.id;
+          return token;
+        },
+        session({ session, token }) {
+          if (session.user) session.user.id = token.id as string;
+          return session;
+        },
+      },
+    });
+  }
+  return nextAuthInstance;
+};
+
 export const handlers = {
-  GET: (req: any) => { injectFallbacks(); return nextAuthResult.handlers.GET(req); },
-  POST: (req: any) => { injectFallbacks(); return nextAuthResult.handlers.POST(req); }
+  GET: (req: any) => getNextAuth().handlers.GET(req),
+  POST: (req: any) => getNextAuth().handlers.POST(req)
 };
 
-export const auth = (...args: any[]) => {
-  injectFallbacks();
-  // @ts-ignore
-  return nextAuthResult.auth(...args);
-};
-
-export const signIn = (...args: any[]) => {
-  injectFallbacks();
-  // @ts-ignore
-  return nextAuthResult.signIn(...args);
-};
-
-export const signOut = (...args: any[]) => {
-  injectFallbacks();
-  // @ts-ignore
-  return nextAuthResult.signOut(...args);
-};
+export const auth = (...args: any[]) => getNextAuth().auth(...args);
+export const signIn = (...args: any[]) => getNextAuth().signIn(...args);
+export const signOut = (...args: any[]) => getNextAuth().signOut(...args);
